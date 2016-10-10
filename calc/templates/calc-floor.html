@@ -1,0 +1,88 @@
+{% extends "_base.html" %}
+
+{% load bootstrap staticfiles %}
+
+
+{% block title %}Калькулятор напольной плитки{% endblock %}
+
+
+{% block extrajs %}
+
+var LAYING_METHOD_DIRECT = 1;
+var LAYING_METHOD_DIRECT_CENTER = 2;
+var LAYING_METHOD_DIAGONAL = 3;
+
+
+$('#id_method').on('change', function(e) {
+    switch(parseInt(this.value, 10)) {
+    case LAYING_METHOD_DIRECT:
+        $('#img-method-example').attr("src", "{% static "images/1.jpg" %}");
+        break;
+    case LAYING_METHOD_DIRECT_CENTER:
+        $('#img-method-example').attr("src", "{% static "images/2.jpg" %}");
+        break;
+    case LAYING_METHOD_DIAGONAL:
+        $('#img-method-example').attr("src", "{% static "images/3.jpg" %}");
+        break;
+    };
+});
+
+{% endblock %}
+
+
+{% block content %}
+<h1>Расчет напольной плитки</h1>
+
+<div class="well">
+    <img src="{% static "images/1.jpg" %}" id="img-method-example" width="200" height="200" />
+
+    <form ation="" method="post">
+        {% csrf_token %}
+        {{ form|bootstrap_horizontal:'col-lg-4' }}
+
+        <button type="submit" class="btn btn-success">Расчитать</button>
+    </form>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">Результат</div>
+    <div class="panel-body">
+        {% if result %}
+        <p>
+            <span>Вам понадобится: </span><b>{{ result }}</b><span> плиток</span>
+        </p>
+        {% endif %}
+
+        {% if cost %}
+        <p>
+            <span>Вы потратите: </span><b>{{ cost }}</b><span> руб.</span>
+        </p>
+        {% endif %}
+
+        {% if draw %}
+        <p>
+            <img src="{{ draw }}">
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+{% comment %}
+{% if result %}
+<div>
+    <p>
+        <span>Результат: </span>{{ result }}<span> плиток</span>
+    </p>
+</div>
+{% endif %}
+
+{% if cost %}
+<div>
+    <p>
+        <span>Цена: </span>{{ cost }}<span> руб.</span>
+    </p>
+</div>
+{% endif %}
+{% endcomment %}
+
+{% endblock %}
