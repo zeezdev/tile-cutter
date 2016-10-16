@@ -1,3 +1,5 @@
+import sys
+
 
 LAYING_METHOD_DIRECT = 1
 LAYING_METHOD_DIRECT_CENTER = 2
@@ -24,26 +26,72 @@ def check_with_delimiters(l, tl, d, c):
     return count
 
 
-from PIL import Image, ImageDraw, ImageColor
+from PIL import Image, ImageDraw, ImageColor, ImageFont
 
 
-def draw_floor(width, length, tile_width, tile_length, method):
+__WATERMARK_FONT_SIZE = 60
+__WATERMARK_TEXT = "www.cutter.com"
+
+watermark_font = ImageFont.truetype(
+    "/home/zeez/work/cutter/static/fonts/arial.ttf",  # TODO: Fix for deploy
+    size=__WATERMARK_FONT_SIZE)
+
+
+def add_watermark(func):
+
+    def wrapper(*args):
+        image = func(*args)
+
+        watermark = Image.new('RGBA', size=image.size, color=0)
+        # watermark = Image.new('RGBA', size=(image.width, 64), color=0)
+        draw = ImageDraw.Draw(watermark)
+        tw, th = draw.textsize(__WATERMARK_TEXT, font=watermark_font)
+        draw.text((image.width/2 - tw/2, image.height/2 - th/2), __WATERMARK_TEXT,  fill=(0, 0, 0, 128), font=watermark_font)
+
+        # image.paste(watermark, box=(0, 15), mask=watermark)
+        return Image.alpha_composite(image, watermark)
+        # return image
+
+    return wrapper
+
+
+def add_background(color):
+    def decorator(func):
+        def wrapper(*args):
+            image = func(*args)
+            bg = Image.new('RGBA', (image.width, image.height), color)
+            bg.paste(image, mask=image)
+
+            return bg
+        return wrapper
+
+    return decorator
+
+
+# @add_background(color=(255, 255, 255, 255))
+@add_watermark
+def draw_floor(width, length, tile_width, tile_length, method=LAYING_METHOD_DIRECT):
     """X=length, Y=width
     :param width: width of floor (mm)
     :param length: length of floor (mm)
+    :param method: mothod of tile laying.
     :return: PIL.Image
     """
-    scale_factor = 10
+    scale_factor = 9  # TODO: need compute this
 
-    size = (int(length/scale_factor), int(width/scale_factor))  # scale 10sm=100mm : 1px.
+    size = (sys.maxsize, sys.maxsize)
+    while any(s > 1000 for s in size):
+        scale_factor += 1
+        size = (int(length/scale_factor), int(width/scale_factor))  # scale 10sm=100mm : 1px.
+
     tile_size = (int(tile_length/scale_factor), int(tile_width/scale_factor))
 
-    image = Image.new('RGB', size, (255, 255, 255))
+    image = Image.new('RGBA', size, (255, 255, 255, 255))
     draw = ImageDraw.Draw(image)
 
     if method == LAYING_METHOD_DIRECT:
-        line_color = (255, 0, 0)
-        line_width = 2
+        line_color = (255, 0, 0, 255)
+        line_width = 1
 
         # рисуем периметр
         draw.line((0, 0, size[0] - 1, 0), fill=line_color, width=line_width)
@@ -60,7 +108,7 @@ def draw_floor(width, length, tile_width, tile_length, method):
         # рисуем плитки по width
         curr_y = 0
         while curr_y < size[1]:
-            draw.line((0, curr_y, size[1]-1, curr_y), fill=line_color, width=line_width)
+            draw.line((0, curr_y, size[0]-1, curr_y), fill=line_color, width=line_width)
             curr_y += tile_size[1]
     else:
         raise Exception("Unknown method")
@@ -79,3 +127,13 @@ def save_image(image, path):
     image.save(fullname, "PNG")
 
     return filename
+
+
+def calc_cost(count, price):
+    """Вычисляет необходимую стоимость простым умножением.
+    Точность 2 знака.
+    :param count:
+    :param price: price of one tile.
+    :return:
+    """
+    return round(count * price, 2)
