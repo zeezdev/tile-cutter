@@ -4,5 +4,6 @@ from .views import *
 
 
 urlpatterns = [
-    url(r"^floor/$", floor, name='floor')
+    url(r"^floor/$", floor, name='floor'),
+    url(r"^walls/$", walls, name='walls'),
 ]

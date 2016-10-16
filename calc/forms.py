@@ -4,7 +4,7 @@ from django.conf import settings
 import os
 
 from .algorithms import check_with_delimiters, \
-    LAYING_METHOD_DIRECT, LAYING_METHOD_DIRECT_CENTER, LAYING_METHOD_DIAGONAL, draw_floor, save_image
+    LAYING_METHOD_DIRECT, LAYING_METHOD_DIRECT_CENTER, LAYING_METHOD_DIAGONAL, draw_floor, save_image, calc_cost
 
 
 LAYING_METHODS = (
@@ -14,14 +14,13 @@ LAYING_METHODS = (
 )
 
 
-class CalcFloorForm(forms.Form):
+class CalcForm(forms.Form):
     """
     :key width: Width of a room (m^2).
     :key length: Length of a room (m^2).
+    :key tile_width: Width of the one tile (mm).
+    :key tile_length: Length of the one tile (mm).
     """
-
-    method = forms.ChoiceField(LAYING_METHODS, required=True, label="Способ укладки")
-    # TODO: start_method - 1. from center, 2. from angle
 
     width = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label="Ширина помещения (m²)")
     length = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label="Длина помещения (m²)")
@@ -35,17 +34,8 @@ class CalcFloorForm(forms.Form):
                              required=False, label="Стоимость плитки (руб)",
                              widget=forms.NumberInput(attrs={'placeholder': "Необязательно"}))
 
-    def clean(self):
-        cleaned_data = super(CalcFloorForm, self).clean()
-        method = int(cleaned_data.get('method'))
-        tile_width = cleaned_data.get('tile_width')
-        tile_length = cleaned_data.get('tile_length')
-
-        if method == LAYING_METHOD_DIAGONAL and not tile_width == tile_length:
-            raise forms.ValidationError("Рассчет 'Диагонального' метода только для квадратных плиток!")
-
     @staticmethod
-    def _calc_direct(w, l, tw, tl, dl):
+    def _calc_direct(w, l, tw, tl, dl):  # TODO: move in to algorithms
         tile_width_cnt = ceil(w / tw)
         tile_length_cnt = ceil(l / tl)
 
@@ -64,7 +54,7 @@ class CalcFloorForm(forms.Form):
         return int(tile_width_cnt * tile_length_cnt)
 
     @staticmethod
-    def _calc_direct_center(w, l, tw, tl, dl):
+    def _calc_direct_center(w, l, tw, tl, dl):  # TODO: move in to algorithms
         tw05 = tw/2
         tile_width_cnt = ceil(((w/2)-tw05) / tw)
         tile_width_cnt *= 2
@@ -90,7 +80,7 @@ class CalcFloorForm(forms.Form):
         return int(tile_width_cnt * tile_length_cnt)
 
     @staticmethod
-    def _calc_diagonal(w, l, tw, tl, dl):
+    def _calc_diagonal(w, l, tw, tl, dl):  # TODO: move in to algorithms
         """
         :param w:
         :param l:
@@ -107,7 +97,7 @@ class CalcFloorForm(forms.Form):
             d = sqrt(tl**2 + tw**2)
 
         d05 = d / 2
-        dd = sqrt(2) * d  # delimiter diagonal
+        dd = sqrt(2) * d  # delimiter diagonal. Why "d"???
 
         # количество плиток в ширину по центральному ряду (нечетные ряды)
         tile_width_cnt = ceil(((w/2) - d05) / d)
@@ -134,6 +124,23 @@ class CalcFloorForm(forms.Form):
         return int((tile_width_cnt * tile_length_cnt) + (tile_width_even_cnt * tile_length_even_cnt))
 
     def calc(self):
+        raise NotImplementedError
+
+
+class CalcFloorForm(CalcForm):
+    method = forms.ChoiceField(LAYING_METHODS, required=True, label="Способ укладки")
+    # TODO: start_method - 1. from center, 2. from angle
+
+    def clean(self):
+        cleaned_data = super(CalcFloorForm, self).clean()
+        method = int(cleaned_data.get('method'))
+        tile_width = cleaned_data.get('tile_width')
+        tile_length = cleaned_data.get('tile_length')
+
+        if method == LAYING_METHOD_DIAGONAL and not tile_width == tile_length:
+            raise forms.ValidationError("Рассчет 'Диагонального' метода только для квадратных плиток!")
+
+    def calc(self):
         width_mm = self.cleaned_data['width'] * 1000.0
         length_mm = self.cleaned_data['length'] * 1000.0
         method = int(self.cleaned_data['method'])
@@ -143,11 +150,11 @@ class CalcFloorForm(forms.Form):
         price = self.cleaned_data['price']
 
         if method == LAYING_METHOD_DIRECT:
-            result = CalcFloorForm._calc_direct(width_mm, length_mm, tile_width, tile_length, delimiter)
+            result = self._calc_direct(width_mm, length_mm, tile_width, tile_length, delimiter)
         elif method == LAYING_METHOD_DIRECT_CENTER:
-            result = CalcFloorForm._calc_direct_center(width_mm, length_mm, tile_width, tile_length, delimiter)
+            result = self._calc_direct_center(width_mm, length_mm, tile_width, tile_length, delimiter)
         elif method == LAYING_METHOD_DIAGONAL:
-            result = CalcFloorForm._calc_diagonal(width_mm, length_mm, tile_width, tile_length, delimiter)
+            result = self._calc_diagonal(width_mm, length_mm, tile_width, tile_length, delimiter)
         else:
             raise Exception("Unsupported method {}".format(method))
 
@@ -156,7 +163,56 @@ class CalcFloorForm(forms.Form):
             cost = round(price * result, 2)
 
         im = draw_floor(width_mm, length_mm, tile_width, tile_length, method)
-        filename = save_image(im, "/home/zeez/tmp/")
+        filename = save_image(im, "/home/zeez/tmp/")  # TODO: use MEDIA_ROOT
+        img_url = os.path.join(settings.MEDIA_URL, filename)
+
+        return result, cost, img_url
+
+
+class CalcWallForm(CalcForm):
+
+    height = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label="Высота помещения (m)")
+
+    field_order = [
+        'width',
+        'length',
+        'height',
+        'tile_width',
+        'tile_length',
+        'delimiter',
+        'price'
+    ]
+
+    def __init__(self, *args, **kw):
+        super(CalcWallForm, self).__init__(*args, **kw)
+        self.fields['tile_width'].label = "Высота плитки (мм)"
+
+    def calc(self):
+        width_mm = self.cleaned_data['width'] * 1000.0
+        length_mm = self.cleaned_data['length'] * 1000.0
+        height_mm = self.cleaned_data['height'] * 1000.0
+
+        # method = int(self.cleaned_data['method'])
+
+        tile_width = self.cleaned_data['tile_width']
+        tile_length = self.cleaned_data['tile_length']
+        delimiter = self.cleaned_data['delimiter']
+
+        price = self.cleaned_data['price']
+
+        perimeter_mm = (width_mm * 2.0) + (length_mm * 2.0)
+        # NOTE: наверное не стоит добавлять ширину разделителя в длину периметра
+        # т.к. будет расход на пил. С другой стороны если плитку не пилять
+        # а режут (плиткорезом) то расхода нет.
+
+        result = self._calc_direct(height_mm, perimeter_mm, tile_width, tile_length, delimiter)
+
+        cost = None
+        if price:
+            cost = calc_cost(result, price)
+
+        im = draw_floor(height_mm, perimeter_mm, tile_width, tile_length)
+        filename = save_image(im, "/home/zeez/tmp/")  # TODO: use MEDIA_ROOT
         img_url = os.path.join(settings.MEDIA_URL, filename)
 
         return result, cost, img_url
