@@ -4,7 +4,8 @@ from django.conf import settings
 import os
 
 from .algorithms import check_with_delimiters, \
-    LAYING_METHOD_DIRECT, LAYING_METHOD_DIRECT_CENTER, LAYING_METHOD_DIAGONAL, draw_floor, save_image, calc_cost
+    LAYING_METHOD_DIRECT, LAYING_METHOD_DIRECT_CENTER, LAYING_METHOD_DIAGONAL, \
+    draw_floor, save_image, calc_cost, draw_walls
 
 
 LAYING_METHODS = (
@@ -74,8 +75,10 @@ class CalcForm(forms.Form):
         #
         # if (tile_length_cnt * tl) + dl_l - l >= tl:
         #     tile_length_cnt -= 1
-        tile_width_cnt = check_with_delimiters(w, tw, dl, tile_width_cnt)
-        tile_length_cnt = check_with_delimiters(l, tl, dl, tile_length_cnt)
+
+        # FIXME: Not work here
+        # tile_width_cnt = check_with_delimiters(w, tw, dl, tile_width_cnt)
+        # tile_length_cnt = check_with_delimiters(l, tl, dl, tile_length_cnt)
 
         return int(tile_width_cnt * tile_length_cnt)
 
@@ -211,7 +214,7 @@ class CalcWallForm(CalcForm):
         if price:
             cost = calc_cost(result, price)
 
-        im = draw_floor(height_mm, perimeter_mm, tile_width, tile_length)
+        im = draw_walls(width_mm, length_mm, height_mm, tile_length, tile_width)
         filename = save_image(im, "/home/zeez/tmp/")  # TODO: use MEDIA_ROOT
         img_url = os.path.join(settings.MEDIA_URL, filename)
 
