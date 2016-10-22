@@ -1,4 +1,5 @@
 import sys
+from math import tan, tanh, sqrt, ceil
 
 
 LAYING_METHOD_DIRECT = 1
@@ -86,20 +87,23 @@ def draw_floor(width, length, tile_width, tile_length, method=LAYING_METHOD_DIRE
 
     tile_size = (int(tile_length/scale_factor), int(tile_width/scale_factor))
 
+    center_x = size[0] / 2
+    center_y = size[1] / 2
+
     image = Image.new('RGBA', size, (255, 255, 255, 255))
     draw = ImageDraw.Draw(image)
 
+    line_color = (255, 0, 0, 255)
+    line_width = 1
+
+    # рисуем периметр
+    draw.line((0, 0, size[0] - 1, 0), fill=line_color, width=line_width)
+    draw.line((0, size[1] - 1, size[0] - 1, size[1] - 1), fill=line_color, width=line_width)
+
+    draw.line((0, 0, 0, size[1] - 1), fill=line_color, width=line_width)
+    draw.line((size[0] - 1, 0, size[0] - 1, size[1] - 1), fill=line_color, width=line_width)
+
     if method == LAYING_METHOD_DIRECT:
-        line_color = (255, 0, 0, 255)
-        line_width = 1
-
-        # рисуем периметр
-        draw.line((0, 0, size[0] - 1, 0), fill=line_color, width=line_width)
-        draw.line((0, size[1]-1, size[0] - 1, size[1] - 1), fill=line_color, width=line_width)
-
-        draw.line((0, 0, 0, size[1] - 1), fill=line_color, width=line_width)
-        draw.line((size[0]-1, 0, size[0] - 1, size[1] - 1), fill=line_color, width=line_width)
-
         # рисуем плитки по length
         curr_x = 0
         while curr_x < size[0]:
@@ -110,8 +114,114 @@ def draw_floor(width, length, tile_width, tile_length, method=LAYING_METHOD_DIRE
         while curr_y < size[1]:
             draw.line((0, curr_y, size[0]-1, curr_y), fill=line_color, width=line_width)
             curr_y += tile_size[1]
+    elif method == LAYING_METHOD_DIRECT_CENTER:  # TODO: simplify - start from outside.
+        # рисуем полосы по length (x)
+        curr_x = size[0]/2 + tile_size[0]/2
+        draw.line((curr_x, 0, curr_x, size[1]-1), fill=line_color, width=line_width)
+        while curr_x >= 0:
+            curr_x -= tile_size[0]
+            draw.line((curr_x, 0, curr_x, size[1] - 1), fill=line_color, width=line_width)
+
+        curr_x = size[0]/2 + tile_size[0]/2
+        draw.line((curr_x, 0, curr_x, size[1] - 1), fill=line_color, width=line_width)
+        while curr_x <= size[0]:
+            curr_x += tile_size[0]
+            draw.line((curr_x, 0, curr_x, size[1] - 1), fill=line_color, width=line_width)
+
+        # рисуем полосы по width (y)
+        curr_y = size[1] / 2 + tile_size[1] / 2
+        draw.line((0, curr_y, size[0] - 1, curr_y), fill=line_color, width=line_width)
+        while curr_y >= 0:
+            curr_y -= tile_size[1]
+            draw.line((0, curr_y, size[0] - 1, curr_y), fill=line_color, width=line_width)
+
+        curr_y = size[1] / 2 + tile_size[1] / 2
+        draw.line((0, curr_y, size[0] - 1, curr_y), fill=line_color, width=line_width)
+        while curr_y <= size[1]:
+            curr_y += tile_size[0]
+            draw.line((0, curr_y, size[0] - 1, curr_y), fill=line_color, width=line_width)
+    elif method == LAYING_METHOD_DIAGONAL:
+        # представим наклонную грань плитки гипотенузой прамоугольного треугольника.
+        # находим длину прилежащего катета через угол (45) и длину противолежащего.
+        b = center_y
+        alpha = 45.0
+        a = b * tanh(alpha)
+
+        # находим диагональ плитки
+        if tile_width == tile_length:
+            d = sqrt(2) * tile_width
+        else:
+            d = sqrt(tile_length**2 + tile_width**2)
+        d /= scale_factor
+        d05 = d/2
+
+        # находим выступ за границами объекта для начала рисования наклонных линий:
+        # сдвигаемся от центра на полплитки + суммарную длину диагоналей целых плиток,
+        # добавляем длину прилежащего катета (a).
+        m = ((ceil((center_x-d05)/d) * d) + d05) - center_x
+        m = -(m+d*2)
+        curr_x = m
+
+        while curr_x < size[0] or curr_x-a < size[0]:
+            draw.line((curr_x-a, 0, curr_x+a, size[1]-1), fill=line_color, width=line_width)
+            draw.line((curr_x + a, 0, curr_x - a, size[1] - 1), fill=line_color, width=line_width)
+            curr_x += d
+
+        # curr_x = m
+        # while curr_x < size[0] or curr_x - a < size[0]:
+        #     draw.line((curr_x + a, 0, curr_x - a, size[1] - 1), fill=line_color, width=line_width)
+        #     curr_x += d
     else:
-        raise Exception("Unknown method")
+        raise Exception("Unknown drawing method")
+
+    return image
+
+
+def draw_walls(width, length, height, tile_length, tile_height):
+    scale_factor = 9.0  # TODO: need compute this
+    perimetr = (length+width)*2
+
+    size = (sys.maxsize, sys.maxsize)
+    while any(s > 1000 for s in size):
+        scale_factor += 1.0
+        size = (int(perimetr/scale_factor), int(width/scale_factor))  # scale 10sm=100mm : 1px.
+
+    tile_size = (int(tile_length/scale_factor), int(tile_height/scale_factor))
+
+    image = Image.new('RGBA', size, (255, 255, 255, 255))
+    draw = ImageDraw.Draw(image)
+
+    # single method
+    line_color = (255, 0, 0, 255)
+    side_color = (0, 0, 255, 255)
+    line_width = 1
+
+    # рисуем контур развертки всех стенок
+    draw.line((0, 0, size[0] - 1, 0), fill=line_color, width=line_width)
+    draw.line((0, size[1]-1, size[0] - 1, size[1] - 1), fill=line_color, width=line_width)
+
+    draw.line((0, 0, 0, size[1] - 1), fill=line_color, width=line_width)
+    draw.line((size[0]-1, 0, size[0] - 1, size[1] - 1), fill=line_color, width=line_width)
+
+    laying_direction_y = -1
+
+    # рисуем плитки по length
+    curr_x = 0
+    while curr_x < size[0]:
+        draw.line((curr_x, 0, curr_x, size[1]-1), fill=line_color, width=line_width)
+        curr_x += tile_size[0]
+
+    # рисуем плитки по height
+    curr_y = 0
+    while curr_y < size[1]:
+        draw.line((0, size[1] - curr_y, size[0]-1, size[1] - curr_y), fill=line_color, width=line_width)
+
+        curr_y += tile_size[1]
+
+    # рисуем стыки стен
+    draw.line((length/scale_factor, 0, length/scale_factor, size[1]-1), fill=side_color, width=2)
+    draw.line(((length+width) / scale_factor, 0, (length+width) / scale_factor, size[1] - 1), fill=side_color, width=2)
+    draw.line(((2*length+width) / scale_factor, 0, (2*length+width) / scale_factor, size[1] - 1), fill=side_color, width=2)
 
     return image
 
