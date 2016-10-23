@@ -167,7 +167,7 @@ class CalcFloorForm(CalcForm):
             cost = round(price * result, 2)
 
         im = draw_floor(width_mm, length_mm, tile_width, tile_length, method)
-        filename = save_image(im, "/home/zeez/tmp/")  # TODO: use MEDIA_ROOT
+        filename = save_image(im, settings.MEDIA_ROOT)
         img_url = os.path.join(settings.MEDIA_URL, filename)
 
         return result, cost, img_url
@@ -218,7 +218,7 @@ class CalcWallForm(CalcForm):
             cost = calc_cost(result + reserve, price)
 
         im = draw_walls(width_mm, length_mm, height_mm, tile_length, tile_width)
-        filename = save_image(im, "/home/zeez/tmp/")  # TODO: use MEDIA_ROOT
+        filename = save_image(im, settings.MEDIA_ROOT)  # TODO: use MEDIA_ROOT
         img_url = os.path.join(settings.MEDIA_URL, filename)
 
         return result, cost, img_url, reserve
