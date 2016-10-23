@@ -19,10 +19,12 @@ tar -zcvf ${DIR}/${ARCHNAME} \
 --exclude="./.idea" \
 --exclude="./.venv" \
 --exclude="./.git" \
+--exclude="./media" \
 --exclude="./${ARCHNAME}" \
 --exclude="./ideas.txt" \
 --exclude="./passwd.txt" \
 --exclude="./.gitignore" \
+--exclude="./cutter/settings.dev.py" \
 --exclude="*.pyc" \
 --exclude="./*/__pycache__" \
 -C ${DIR} .

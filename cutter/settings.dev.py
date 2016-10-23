@@ -23,9 +23,9 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'n6c=i^%bnr%xyz=m&69matq=1d3k)9e-6daz+)6k+053!cqna9'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
-ALLOWED_HOSTS = ['vm26173.hv8.ru', '80.78.251.208']
+ALLOWED_HOSTS = []
 
 
 # Application definition
@@ -87,9 +87,9 @@ WSGI_APPLICATION = 'cutter.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'tilecutter',
-        'USER': 'tilecutteruser',
-        'PASSWORD': 'graficon688028',
+        'NAME': 'cutter',
+        'USER': 'cutteruser',
+        'PASSWORD': '88323003',
         'HOST': '127.0.0.1'
     }
 }
@@ -139,7 +139,7 @@ STATICFILES_DIRS = (
     os.path.join(os.path.dirname(__file__), '../static'),
 )
 
-MEDIA_ROOT = "/root/webapps/cutter/media/"
+MEDIA_ROOT = "/home/zeez/work/cutter/media/"
 MEDIA_URL = "/media/"
 
 
@@ -173,7 +173,7 @@ PIPELINE = {
         # Project libraries.
         'libraries': {
             'source_filenames': (
-                '/root/webapps/cutter/static/bower_components/bootstrap/dist/css/bootstrap.css',
+                '/home/zeez/work/cutter/static/bower_components/bootstrap/dist/css/bootstrap.css',
             ),
             # Compress passed libraries and have
             # the output in`css/libs.min.css`.
@@ -188,7 +188,7 @@ PIPELINE = {
         # Project JavaScript libraries.
         'libraries': {
             'source_filenames': (
-                '/root/webapps/cutter/static/bower_components/jquery/dist/jquery.js',
+                '/home/zeez/work/cutter/static/bower_components/jquery/dist/jquery.js',
             ),
             # Compress all passed files into `js/libs.min.js`.
             'output_filename': 'js/libs.min.js',
@@ -202,4 +202,5 @@ PIPELINE = {
 
 # DRAWING
 DRAWING_WATERMARK_TEXT = "www.tilecutter.ru"
-DRAWING_WATERMARK_FONT = "/root/webapps/cutter/static/fonts/arial.ttf"
+DRAWING_WATERMARK_FONT = "/home/zeez/work/cutter/static/fonts/arial.ttf"
+
