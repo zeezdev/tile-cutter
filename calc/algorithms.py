@@ -33,17 +33,12 @@ from PIL import Image, ImageDraw, ImageColor, ImageFont
 
 __WATERMARK_FONT_SIZE = 60
 
-watermark_font = ImageFont.truetype(
-    "/home/zeez/work/cutter/static/fonts/arial.ttf",  # TODO: Fix for deploy
-    size=__WATERMARK_FONT_SIZE)
-
 
 def get_font(size):
     return ImageFont.truetype(
-        "/home/zeez/work/cutter/static/fonts/arial.ttf",  # TODO: Fix path for deploy
+        settings.DRAWING_WATERMARK_FONT,
         size=size
     )
-
 
 def add_text_watermark(text):
 
