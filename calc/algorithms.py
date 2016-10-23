@@ -1,5 +1,6 @@
 import sys
 from math import tan, tanh, sqrt, ceil
+from django.conf import settings
 
 
 LAYING_METHOD_DIRECT = 1
@@ -31,29 +32,50 @@ from PIL import Image, ImageDraw, ImageColor, ImageFont
 
 
 __WATERMARK_FONT_SIZE = 60
-__WATERMARK_TEXT = "www.cutter.com"
 
 watermark_font = ImageFont.truetype(
     "/home/zeez/work/cutter/static/fonts/arial.ttf",  # TODO: Fix for deploy
     size=__WATERMARK_FONT_SIZE)
 
 
-def add_watermark(func):
+def get_font(size):
+    return ImageFont.truetype(
+        "/home/zeez/work/cutter/static/fonts/arial.ttf",  # TODO: Fix path for deploy
+        size=size
+    )
 
-    def wrapper(*args):
-        image = func(*args)
 
-        watermark = Image.new('RGBA', size=image.size, color=0)
-        # watermark = Image.new('RGBA', size=(image.width, 64), color=0)
-        draw = ImageDraw.Draw(watermark)
-        tw, th = draw.textsize(__WATERMARK_TEXT, font=watermark_font)
-        draw.text((image.width/2 - tw/2, image.height/2 - th/2), __WATERMARK_TEXT,  fill=(0, 0, 0, 128), font=watermark_font)
+def add_text_watermark(text):
 
-        # image.paste(watermark, box=(0, 15), mask=watermark)
-        return Image.alpha_composite(image, watermark)
-        # return image
+    def decorator(func):
+        def wrapper(*args):
+            image = func(*args)
 
-    return wrapper
+            watermark = Image.new('RGBA', size=image.size, color=0)
+            # watermark = Image.new('RGBA', size=(image.width, 64), color=0)
+            draw = ImageDraw.Draw(watermark)
+            font = get_font(60)
+            tw = None
+            th = None
+            while True:
+                tw, th = draw.textsize(text, font=font)
+                if tw+10 < image.size[0] and th+10 < image.size[1]:
+                    break
+                font = get_font(font.size-2)
+
+            draw.text(
+                (image.width/2 - tw/2, image.height/2 - th/2),
+                text,
+                fill=(0, 0, 0, 128),
+                font=font
+            )
+
+            # image.paste(watermark, box=(0, 15), mask=watermark)
+            return Image.alpha_composite(image, watermark)
+            # return image
+
+        return wrapper
+    return decorator
 
 
 def add_background(color):
@@ -70,7 +92,7 @@ def add_background(color):
 
 
 # @add_background(color=(255, 255, 255, 255))
-@add_watermark
+@add_text_watermark(settings.DRAWING_WATERMARK_TEXT)
 def draw_floor(width, length, tile_width, tile_length, method=LAYING_METHOD_DIRECT):
     """X=length, Y=width
     :param width: width of floor (mm)
@@ -177,6 +199,7 @@ def draw_floor(width, length, tile_width, tile_length, method=LAYING_METHOD_DIRE
     return image
 
 
+@add_text_watermark(settings.DRAWING_WATERMARK_TEXT)
 def draw_walls(width, length, height, tile_length, tile_height):
     scale_factor = 9.0  # TODO: need compute this
     perimetr = (length+width)*2
