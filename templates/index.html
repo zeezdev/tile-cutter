@@ -6,12 +6,22 @@
 
 {% block content %}
 <h1>Калькулятор плитки</h1>
-<ul style="font-size:16px;">
-    <li>
-        <a href="/calc/floor/">Расчитать напольную плитку</a>
-    </li>
-    <li>
-        <a href="/calc/walls/">Расчитать настенную плитку</a>
-    </li>
-</ul>
+
+<div class="row">
+    <div class="col-lg-6">
+        <a href="/calc/floor/">
+            <div class="well well-lg text-center" style="background-color: #00b3ee; font-size: 18px;">
+                Пол
+            </div>
+        </a>
+    </div>
+
+    <div class="col-lg-6">
+        <a href="/calc/walls/">
+            <div class="well well-lg text-center" style="background-color: #00b3ee; font-size: 18px;">
+                Стены
+            </div>
+        </a>
+    </div>
+</div>
 {% endblock %}
