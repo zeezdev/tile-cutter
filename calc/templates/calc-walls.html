@@ -28,7 +28,10 @@
     <div class="panel-body">
         {% if result %}
         <p>
-            <span>Вам понадобится: </span><b>{{ result }}</b><span> плиток</span>
+            <span>Вам понадобится (c запасом): </span><b>{{ result }}</b><span> плиток</span>
+        </p>
+        <p>
+            <span>Запас: </span><b>{{ reserve }}</b><span> плиток</span>
         </p>
         {% endif %}
 
@@ -40,7 +43,7 @@
 
         {% if draw %}
         <p>
-            <span>Примерная схема укладки: </span>
+            <span>Примерная схема укладки (в развертке): </span>
             <br>
             <img style="margin: 5px 10px;" src="{{ draw }}">
         </p>

@@ -200,3 +200,6 @@ PIPELINE = {
 # PIPELINE['CSS_COMPRESSOR'] = 'pipeline.compressors.NoopCompressor'
 # PIPELINE['JS_COMPRESSOR'] = 'pipeline.compressors.NoopCompressor'
 
+# DRAWING
+DRAWING_WATERMARK_TEXT = "www.cutter.com"
+

@@ -8,6 +8,7 @@
 
 {% block extrajs %}
 
+/*
 var LAYING_METHOD_DIRECT = 1;
 var LAYING_METHOD_DIRECT_CENTER = 2;
 var LAYING_METHOD_DIAGONAL = 3;
@@ -26,6 +27,7 @@ $('#id_method').on('change', function(e) {
         break;
     };
 });
+*/
 
 {% endblock %}
 
@@ -34,7 +36,9 @@ $('#id_method').on('change', function(e) {
 <h1>Расчет напольной плитки</h1>
 
 <div class="well">
+    {% comment %}
     <img src="{% static "images/1.jpg" %}" id="img-method-example" width="200" height="200" />
+    {% endcomment %}
 
     <form ation="" method="post">
         {% csrf_token %}

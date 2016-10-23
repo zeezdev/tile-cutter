@@ -22,18 +22,19 @@ class CalcForm(forms.Form):
     :key tile_width: Width of the one tile (mm).
     :key tile_length: Length of the one tile (mm).
     """
+    length = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label="Длина помещения (m)")
+    width = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label="Ширина помещения (m)")
 
-    width = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label="Ширина помещения (m²)")
-    length = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label="Длина помещения (m²)")
+    tile_width = forms.IntegerField(min_value=1, max_value=10000, required=True, label="Ширина плитки (mm)")
+    tile_length = forms.IntegerField(min_value=1, max_value=10000, required=True, label="Длина плитки (mm)")
 
-    tile_width = forms.IntegerField(min_value=1, max_value=10000, required=True, label="Ширина плитки (мм)")
-    tile_length = forms.IntegerField(min_value=1, max_value=10000, required=True, label="Длина плитки (мм)")
-
-    delimiter = forms.FloatField(min_value=0.0, max_value=10.0, required=True, label="Расстояние между плитками (мм)")
+    delimiter = forms.FloatField(min_value=0.0, max_value=10.0, required=True, label="Расстояние между плитками (mm)")
 
     price = forms.FloatField(min_value=0.0, max_value=100000.0,
                              required=False, label="Стоимость плитки (руб)",
                              widget=forms.NumberInput(attrs={'placeholder': "Необязательно"}))
+
+    reserve = forms.FloatField(min_value=0.0, max_value=100.0, label="Запас (%)")
 
     @staticmethod
     def _calc_direct(w, l, tw, tl, dl):  # TODO: move in to algorithms
@@ -177,18 +178,19 @@ class CalcWallForm(CalcForm):
     height = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label="Высота помещения (m)")
 
     field_order = [
-        'width',
         'length',
+        'width',
         'height',
         'tile_width',
         'tile_length',
         'delimiter',
-        'price'
+        'price',
+        'reserve'
     ]
 
     def __init__(self, *args, **kw):
         super(CalcWallForm, self).__init__(*args, **kw)
-        self.fields['tile_width'].label = "Высота плитки (мм)"
+        self.fields['tile_width'].label = "Высота плитки (mm)"
 
     def calc(self):
         width_mm = self.cleaned_data['width'] * 1000.0
@@ -200,8 +202,8 @@ class CalcWallForm(CalcForm):
         tile_width = self.cleaned_data['tile_width']
         tile_length = self.cleaned_data['tile_length']
         delimiter = self.cleaned_data['delimiter']
-
         price = self.cleaned_data['price']
+        reserve_percent = self.cleaned_data['reserve']
 
         perimeter_mm = (width_mm * 2.0) + (length_mm * 2.0)
         # NOTE: наверное не стоит добавлять ширину разделителя в длину периметра
@@ -209,16 +211,17 @@ class CalcWallForm(CalcForm):
         # а режут (плиткорезом) то расхода нет.
 
         result = self._calc_direct(height_mm, perimeter_mm, tile_width, tile_length, delimiter)
+        reserve = ceil(result / 100.0 * reserve_percent)
 
         cost = None
         if price:
-            cost = calc_cost(result, price)
+            cost = calc_cost(result + reserve, price)
 
         im = draw_walls(width_mm, length_mm, height_mm, tile_length, tile_width)
         filename = save_image(im, "/home/zeez/tmp/")  # TODO: use MEDIA_ROOT
         img_url = os.path.join(settings.MEDIA_URL, filename)
 
-        return result, cost, img_url
+        return result, cost, img_url, reserve
 
 
 
