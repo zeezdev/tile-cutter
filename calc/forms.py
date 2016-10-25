@@ -37,51 +37,25 @@ class CalcForm(forms.Form):
     reserve = forms.FloatField(min_value=0.0, max_value=100.0, label="Запас (%)")
 
     @staticmethod
-    def _calc_direct(w, l, tw, tl, dl):  # TODO: move in to algorithms
-        tile_width_cnt = ceil(w / tw)
-        tile_length_cnt = ceil(l / tl)
+    def _calc_direct(w, l, tw, tl, dl):  # TODO: move in to algorithms; Use direction of start.
+        # NOTE: между первой плиткой и стенкой разделитель (w-dl)
+        width_cnt = ceil((w-dl) / (tw+dl))
+        length_cnt = ceil((l-dl) / (tl+dl))
 
-        # уточнение с межплиточным расстоянием
-        # dl_w = dl * (tile_width_cnt-1)
-        # dl_l = dl * (tile_length_cnt-1)
-        #
-        # if (tile_width_cnt * tw) + dl_w - w >= tw:
-        #     tile_width_cnt -= 1
-        #
-        # if (tile_length_cnt * tl) + dl_l - l >= tl:
-        #     tile_length_cnt -= 1
-        tile_width_cnt = check_with_delimiters(w, tw, dl, tile_width_cnt)
-        tile_length_cnt = check_with_delimiters(l, tl, dl, tile_length_cnt)
-
-        return int(tile_width_cnt * tile_length_cnt)
+        return int(width_cnt * length_cnt)
 
     @staticmethod
     def _calc_direct_center(w, l, tw, tl, dl):  # TODO: move in to algorithms
-        tw05 = tw/2
-        tile_width_cnt = ceil(((w/2)-tw05) / tw)
-        tile_width_cnt *= 2
-        tile_width_cnt += 1
+        twd = tw + dl
+        tld = tl + dl
 
-        tl05 = tl/2
-        tile_length_cnt = ceil(((l/2)-tl05) / tl)
-        tile_length_cnt *= 2
-        tile_length_cnt += 1
+        half_w = (w/2) - (tw/2 + dl)
+        half_l = (l/2) - (tl/2 + dl)
 
-        # уточнение с межплиточным расстоянием
-        # dl_w = dl * (tile_width_cnt-1)
-        # dl_l = dl * (tile_length_cnt-1)
-        #
-        # if (tile_width_cnt * tw) + dl_w - w >= tw:
-        #     tile_width_cnt -= 1
-        #
-        # if (tile_length_cnt * tl) + dl_l - l >= tl:
-        #     tile_length_cnt -= 1
+        cnt_w = ceil(half_w/twd) * 2 + 1
+        cnt_l = ceil(half_l/tld) * 2 + 1
 
-        # FIXME: Not work here
-        # tile_width_cnt = check_with_delimiters(w, tw, dl, tile_width_cnt)
-        # tile_length_cnt = check_with_delimiters(l, tl, dl, tile_length_cnt)
-
-        return int(tile_width_cnt * tile_length_cnt)
+        return int(cnt_w * cnt_l)
 
     @staticmethod
     def _calc_diagonal(w, l, tw, tl, dl):  # TODO: move in to algorithms
@@ -98,34 +72,29 @@ class CalcForm(forms.Form):
         if tw == tl:
             d = sqrt(2) * tw
         else:
-            d = sqrt(tl**2 + tw**2)
+            # d = sqrt(tl**2 + tw**2)
+            raise Exception("not supported")
 
         d05 = d / 2
-        dd = sqrt(2) * d  # delimiter diagonal. Why "d"???
+        dd = sqrt(2) * dl  # delimiter diagonal
+        d3 = d + dd  # tile diagonal + delimiter
+
+        half_w = (w/2) - (d05+dd)
+        half_l = (l/2) - (d05+dd)
 
         # количество плиток в ширину по центральному ряду (нечетные ряды)
-        tile_width_cnt = ceil(((w/2) - d05) / d)
-        tile_width_cnt *= 2
-        tile_width_cnt += 1  # center
-        tile_width_cnt = check_with_delimiters(w, d, dd, tile_width_cnt)
+        width_cnt = ceil(half_w/d3) * 2 + 1
 
         # количество плиток в ширину по четным рядам
-        tile_width_even_cnt = ceil((w/2) / d)
-        tile_width_even_cnt *= 2
-        tile_width_even_cnt = check_with_delimiters(w, d, dd, tile_width_even_cnt)
+        width_even_cnt = ceil(((w/2)-(dd/2)) / d3) * 2
 
         # количество плиток в длину по центральному ряду (нечетные ряды)
-        tile_length_cnt = ceil(((l/2) - d05) / d)
-        tile_length_cnt *= 2
-        tile_length_cnt += 1
-        tile_length_cnt = check_with_delimiters(l, d, dd, tile_length_cnt)
+        length_cnt = ceil(half_l/d3) * 2 + 1
 
         # количество плиток в длину по четным рядам
-        tile_length_even_cnt = ceil((l/2) / d)
-        tile_length_even_cnt *= 2
-        tile_length_even_cnt = check_with_delimiters(l, d, dd, tile_length_even_cnt)
+        length_even_cnt = ceil(((l/2) - (dd/2)) / d3) * 2
 
-        return int((tile_width_cnt * tile_length_cnt) + (tile_width_even_cnt * tile_length_even_cnt))
+        return int((width_cnt * length_cnt) + (width_even_cnt * length_even_cnt))
 
     def calc(self):
         raise NotImplementedError
