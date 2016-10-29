@@ -201,6 +201,6 @@ PIPELINE = {
 # PIPELINE['JS_COMPRESSOR'] = 'pipeline.compressors.NoopCompressor'
 
 # DRAWING
-DRAWING_WATERMARK_TEXT = "www.tilecutter.ru"
+DRAWING_WATERMARK_TEXT = "www.tcutter.ru"
 DRAWING_WATERMARK_FONT = "/home/zeez/work/cutter/static/fonts/arial.ttf"
 
