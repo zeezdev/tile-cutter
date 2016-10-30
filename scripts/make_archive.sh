@@ -26,6 +26,7 @@ tar -zcvf ${DIR}/${ARCHNAME} \
 --exclude="./passwd.txt" \
 --exclude="./.gitignore" \
 --exclude="./cutter/settings.dev.py" \
+--exclude="./requirements/develop.txt" \
 --exclude="*.pyc" \
 --exclude="./*/__pycache__" \
 -C ${DIR} .
