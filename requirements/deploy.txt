@@ -1,0 +1,6 @@
+Django==1.10.1
+psycopg2==2.6.2
+Pillow==3.4.1
+gunicorn==19.6.0
+# Django's plugins
+django-bootstrap-form==3.2.1

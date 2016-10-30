@@ -13,12 +13,6 @@
 
     {% block extrahead %}
     {% endblock %}
-
-    <script type="text/javascript">
-        $(function(){
-          {% block extrajs %} {% endblock %}
-        });
-    </script>
 </head>
 
 <body>
@@ -43,10 +37,7 @@
     </nav>
 
     <div class="container">
-        <div style="padding: 60px 15px;">
-        {% block content %}
-        {% endblock %}
-        </div>
+        {% block content %}{% endblock %}
     </div>
 
     <footer class="footer">
@@ -59,5 +50,11 @@
 
     <script src="{% static 'bower_components/jquery/dist/js/jquery.js' %}"></script>
     <script src="{% static 'bower_components/boostrap/dist/js/bootstrap.js' %}"></script>
+
+    <script type="text/javascript">
+        $(function(){
+          {% block extrajs %} {% endblock %}
+        });
+    </script>
 </body>
 </html>
