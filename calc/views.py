@@ -13,18 +13,18 @@ def floor(request):
         'reserve': 5.0
     })
 
-    result = None
-    cost = None
-    image = None
+    context = {'form': form}
 
     if request.method == 'POST':
         form = CalcFloorForm(request.POST)
+        context['form'] = form
         if form.is_valid():
-            result, cost, image = form.calc()
-        # else:
-        #     result = "Ошибка"
+            result, cost, image, reserve = form.calc()
+            context.update({
+                'result': result, 'cost': cost, 'draw': image, 'reserve': reserve
+            })
 
-    return render(request, 'calc-floor.html', {'form': form, 'result': result, 'cost': cost, 'draw': image})
+    return render(request, 'calc-floor.html', context)
 
 
 def walls(request):
@@ -36,19 +36,15 @@ def walls(request):
         'reserve': 5.0
     })
 
-    result = None
-    cost = None
-    image = None
     context = {'form': form}
 
     if request.method == 'POST':
         form = CalcWallForm(request.POST)
+        context['form'] = form
         if form.is_valid():
             result, cost, image, reserve = form.calc()
             context.update({
                 'result': result, 'cost': cost, 'draw': image, 'reserve': reserve
             })
-        # else:
-        #     result = "Ошибка"
 
     return render(request, 'calc-walls.html', context)

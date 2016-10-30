@@ -53,7 +53,10 @@ $('#id_method').on('change', function(e) {
     <div class="panel-body">
         {% if result %}
         <p>
-            <span>Вам понадобится: </span><b>{{ result }}</b><span> плиток</span>
+            <span>Вам понадобится (c запасом): </span><b>{{ result }}</b><span> плиток</span>
+        </p>
+        <p>
+            <span>Запас: </span><b>{{ reserve }}</b><span> плиток</span>
         </p>
         {% endif %}
 

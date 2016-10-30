@@ -121,6 +121,7 @@ class CalcFloorForm(CalcForm):
         tile_length = self.cleaned_data['tile_length']
         delimiter = self.cleaned_data['delimiter']
         price = self.cleaned_data['price']
+        reserve_percent = self.cleaned_data['reserve']
 
         if method == LAYING_METHOD_DIRECT:
             result = self._calc_direct(width_mm, length_mm, tile_width, tile_length, delimiter)
@@ -131,15 +132,16 @@ class CalcFloorForm(CalcForm):
         else:
             raise Exception("Unsupported method {}".format(method))
 
+        reserve = ceil(result / 100.0 * reserve_percent)
         cost = None
         if price:
-            cost = round(price * result, 2)
+            cost = calc_cost(result + reserve, price)
 
         im = draw_floor(width_mm, length_mm, tile_width, tile_length, method)
         filename = save_image(im, settings.MEDIA_ROOT)
         img_url = os.path.join(settings.MEDIA_URL, filename)
 
-        return result, cost, img_url
+        return result, cost, img_url, reserve
 
 
 class CalcWallForm(CalcForm):
