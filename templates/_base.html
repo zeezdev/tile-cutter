@@ -1,8 +1,4 @@
-{% load staticfiles %}
-{% load i18n %}
-
-<!-- compressed tags is created by Django Pipeline.  -->
-{% load staticfiles pipeline %}
+{% load staticfiles i18n %}
 
 <!DOCTYPE html>
 <html lang="en">
@@ -12,12 +8,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>ПЛИТКОРЕЗ | {% block title %}{% endblock %}</title>
 
-
-    <!-- Include CSS files -->
-    {% stylesheet 'libraries' %}
-    <!-- Include JavaScript files -->
-    {% javascript 'libraries' %}
-
+    <link rel="stylesheet" type="text/css" href="{% static 'bower_components/bootstrap/dist/css/bootstrap.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/tcutter.css' %}">
 
     {% block extrahead %}
     {% endblock %}
@@ -57,5 +49,15 @@
         </div>
     </div>
 
+    <footer class="footer">
+        <div class="container">
+            <p class="text-muted">
+                © Copyright 2016 TCutter
+            </p>
+        </div>
+    </footer>
+
+    <script src="{% static 'bower_components/jquery/dist/js/jquery.js' %}"></script>
+    <script src="{% static 'bower_components/boostrap/dist/js/bootstrap.js' %}"></script>
 </body>
 </html>

@@ -20,6 +20,7 @@ tar -zcvf ${DIR}/${ARCHNAME} \
 --exclude="./.venv" \
 --exclude="./.git" \
 --exclude="./media" \
+--exclude="./static/bower_components" \
 --exclude="./${ARCHNAME}" \
 --exclude="./ideas.txt" \
 --exclude="./passwd.txt" \

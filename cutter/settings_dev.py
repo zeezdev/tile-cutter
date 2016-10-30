@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'pipeline',
+    # 'pipeline',
     'bootstrapform',
 
     'cutter',
@@ -142,63 +142,6 @@ STATICFILES_DIRS = (
 MEDIA_ROOT = "/home/zeez/work/cutter/media/"
 MEDIA_URL = "/media/"
 
-
-# STATICFILES_STORAGE = 'pipeline.storage.PipelineCachedStorage'
-STATICFILES_STORAGE = 'pipeline.storage.PipelineStorage'
-
-# for production
-# STATICFILES_FINDERS = (
-#     'pipeline.finders.FileSystemFinder',
-#     'pipeline.finders.AppDirectoriesFinder',
-#     'pipeline.finders.CachedFileFinder',
-#     'pipeline.finders.PipelineFinder',
-# )
-
-# for develop
-STATICFILES_FINDERS = (
-    'django.contrib.staticfiles.finders.FileSystemFinder',
-    'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-    'pipeline.finders.PipelineFinder',
-)
-
-PIPELINE = {
-    'PIPELINE_ENABLED': True,
-    'COMPILERS': {
-        'pipeline.compilers.stylus.StylusCompiler',
-        'pipeline.compilers.es6.ES6Compiler',
-    },
-    'CSS_COMPRESSOR': 'pipeline.compressors.NoopCompressor',
-    'JS_COMPRESSOR': 'pipeline.compressors.NoopCompressor',
-    'STYLESHEETS': {
-        # Project libraries.
-        'libraries': {
-            'source_filenames': (
-                '/home/zeez/work/cutter/static/bower_components/bootstrap/dist/css/bootstrap.css',
-            ),
-            # Compress passed libraries and have
-            # the output in`css/libs.min.css`.
-            'output_filename': 'css/libs.min.css',
-            # 'extra_context': {
-            #     'media': 'screen,projection',
-            # }
-        }
-        # ...
-    },
-    'JAVASCRIPT': {
-        # Project JavaScript libraries.
-        'libraries': {
-            'source_filenames': (
-                '/home/zeez/work/cutter/static/bower_components/jquery/dist/jquery.js',
-            ),
-            # Compress all passed files into `js/libs.min.js`.
-            'output_filename': 'js/libs.min.js',
-        }
-        # ...
-    }
-}
-
-# PIPELINE['CSS_COMPRESSOR'] = 'pipeline.compressors.NoopCompressor'
-# PIPELINE['JS_COMPRESSOR'] = 'pipeline.compressors.NoopCompressor'
 
 # DRAWING
 DRAWING_WATERMARK_TEXT = "www.tcutter.ru"
