@@ -1,6 +1,8 @@
 from django import forms
-from math import sqrt, ceil
+from math import sqrt, ceil, floor
 from django.conf import settings
+from django.utils.translation import ugettext_lazy as _
+from django.forms.utils import ErrorList
 import os
 
 from .algorithms import check_with_delimiters, \
@@ -9,9 +11,9 @@ from .algorithms import check_with_delimiters, \
 
 
 LAYING_METHODS = (
-    (LAYING_METHOD_DIRECT, "Прямой (от угла)"),
-    (LAYING_METHOD_DIRECT_CENTER, "Прямой (от центра)"),
-    (LAYING_METHOD_DIAGONAL, "Диагональный")
+    (LAYING_METHOD_DIRECT, _("Прямой (от угла)")),
+    (LAYING_METHOD_DIRECT_CENTER, _("Прямой (от центра)")),
+    (LAYING_METHOD_DIAGONAL, _("Диагональный"))
 )
 
 
@@ -22,19 +24,19 @@ class CalcForm(forms.Form):
     :key tile_width: Width of the one tile (mm).
     :key tile_length: Length of the one tile (mm).
     """
-    length = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label="Длина помещения (m)")
-    width = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label="Ширина помещения (m)")
+    length = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label=_("Длина помещения (m)"))
+    width = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label=_("Ширина помещения (m)"))
 
-    tile_width = forms.IntegerField(min_value=1, max_value=10000, required=True, label="Ширина плитки (mm)")
-    tile_length = forms.IntegerField(min_value=1, max_value=10000, required=True, label="Длина плитки (mm)")
+    tile_width = forms.IntegerField(min_value=1, max_value=10000, required=True, label=_("Ширина плитки (mm)"))
+    tile_length = forms.IntegerField(min_value=1, max_value=10000, required=True, label=_("Длина плитки (mm)"))
 
-    delimiter = forms.FloatField(min_value=0.0, max_value=10.0, required=True, label="Расстояние между плитками (mm)")
+    delimiter = forms.FloatField(min_value=0.0, max_value=10.0, required=True, label=_("Расстояние между плитками (mm)"))
 
     price = forms.FloatField(min_value=0.0, max_value=100000.0,
-                             required=False, label="Стоимость плитки (руб)",
-                             widget=forms.NumberInput(attrs={'placeholder': "Необязательно"}))
+                             required=False, label=_("Стоимость плитки (руб)"),
+                             widget=forms.NumberInput(attrs={'placeholder': _("Необязательно")}))
 
-    reserve = forms.FloatField(min_value=0.0, max_value=100.0, label="Запас (%)")
+    reserve = forms.FloatField(min_value=0.0, max_value=100.0, label=_("Запас (%)"))
 
     @staticmethod
     def _calc_direct(w, l, tw, tl, dl):  # TODO: move in to algorithms; Use direction of start.
@@ -73,7 +75,7 @@ class CalcForm(forms.Form):
             d = sqrt(2) * tw
         else:
             # d = sqrt(tl**2 + tw**2)
-            raise Exception("not supported")
+            raise Exception(_("Не поддерживается"))
 
         d05 = d / 2
         dd = sqrt(2) * dl  # delimiter diagonal
@@ -146,22 +148,53 @@ class CalcFloorForm(CalcForm):
 
 class CalcWallForm(CalcForm):
 
-    height = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label="Высота помещения (m)")
+    height = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label=_("Высота помещения (m)"))
+
+    door_width = forms.FloatField(
+        max_value=10.0, min_value=0.0, required=False,
+        label=_("Ширина двери (m)"),
+        widget=forms.NumberInput(attrs={'placeholder': _("Необязательно")})
+    )
+    door_height = forms.FloatField(
+        max_value=10.0, min_value=0.0, required=False,
+        label="Высота двери (m)",
+        widget=forms.NumberInput(attrs={'placeholder': _("Необязательно")})
+    )
+    # door_position = forms.FloatField(max_value=10.0, min_value=0.0, required=False, label="Положение двери (m)")
 
     field_order = [
-        'length',
-        'width',
-        'height',
-        'tile_width',
-        'tile_length',
-        'delimiter',
+        'length', 'width', 'height',
+        'tile_width', 'tile_length', 'delimiter',
         'price',
-        'reserve'
+        'reserve',
+        'door_width', 'door_height'
     ]
 
     def __init__(self, *args, **kw):
         super(CalcWallForm, self).__init__(*args, **kw)
-        self.fields['tile_width'].label = "Высота плитки (mm)"
+        self.fields['tile_width'].label = _("Высота плитки (mm)")
+
+    def clean_door_height(self):
+        data = self.cleaned_data['door_height']
+        if data is not None and data > self.cleaned_data['height']:
+            raise forms.ValidationError(_("Высота двери не может быть больше высоты помещения"))
+        return data
+
+    def clean_door_width(self):
+        data = self.cleaned_data['door_width']
+        if data is not None and data > min(self.cleaned_data['width'], self.cleaned_data['length']):
+            raise forms.ValidationError(_("Ширина двери не может быть больше стен помещения"))
+        return data
+
+    def clean(self):
+        cleaned_data = super(CalcWallForm, self).clean()
+        if cleaned_data['door_height'] is not None and cleaned_data['door_width'] is None:
+            self._errors["door_width"] = ErrorList([_("Укажите ширину двери")])
+
+        if cleaned_data['door_width'] is not None and cleaned_data['door_height'] is None:
+            self._errors["door_height"] = ErrorList([_("Укажите высоту двери")])
+
+        return cleaned_data
 
     def calc(self):
         width_mm = self.cleaned_data['width'] * 1000.0
@@ -176,23 +209,54 @@ class CalcWallForm(CalcForm):
         price = self.cleaned_data['price']
         reserve_percent = self.cleaned_data['reserve']
 
+        door_width_mm = self.cleaned_data['door_width']
+        door_height_mm = self.cleaned_data['door_height']
+        if door_width_mm is not None and door_height_mm is not None:
+            door_width_mm *= 1000.0
+            door_height_mm *= 1000.0
+
         perimeter_mm = (width_mm + length_mm) * 2.0
         # NOTE: наверное не стоит добавлять ширину разделителя в длину периметра
         # т.к. будет расход на пил. С другой стороны если плитку не пилять
         # а режут (плиткорезом) то расхода нет.
 
-        result = self._calc_direct(height_mm, perimeter_mm, tile_width, tile_length, delimiter)
+        # result = self._calc_direct(height_mm, perimeter_mm, tile_width, tile_length, delimiter)
+        result = self._calc_direct_with_door(
+            length_mm, width_mm, height_mm,
+            tile_length, tile_width, delimiter,
+            door_width_mm, door_height_mm
+        )
+
         reserve = ceil(result / 100.0 * reserve_percent)
 
         cost = None
         if price:
             cost = calc_cost(result + reserve, price)
 
-        im = draw_walls(width_mm, length_mm, height_mm, tile_length, tile_width)
+        im = draw_walls(width_mm, length_mm, height_mm, tile_length, tile_width, door_width_mm, door_height_mm)
         filename = save_image(im, settings.MEDIA_ROOT)
         img_url = os.path.join(settings.MEDIA_URL, filename)
 
         return result, cost, img_url, reserve
+
+    @staticmethod
+    def _calc_direct_with_door(l, w, h, tw, th, dl, door_width=None, door_height=None):  # TODO: move in to algorithms; Use direction of start.
+        p = (l+w) * 2
+        # NOTE: между первой плиткой и стенкой разделитель (p-dl), (h-dl)
+        width_cnt = ceil((p-dl) / (tw+dl))
+        height_cnt = ceil((h-dl) / (th+dl))
+        tiles_in_door = 0
+
+        if door_width and door_height:
+            start_door_w = l + w + l/2 - door_width/2
+            start_tile_in_door_w = ceil(start_door_w/tw) * tw  # начало первой плитки внутри двери
+            tcnt_w = 0
+            while start_tile_in_door_w + ((tcnt_w+1) * tw) <= start_door_w + door_width:
+                tcnt_w += 1
+            if tcnt_w > 0:
+                tiles_in_door = int(tcnt_w * floor(door_height/th))
+
+        return int(width_cnt * height_cnt) - tiles_in_door
 
 
 
