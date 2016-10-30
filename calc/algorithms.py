@@ -195,16 +195,24 @@ def draw_floor(width, length, tile_width, tile_length, method=LAYING_METHOD_DIRE
 
 
 @add_text_watermark(settings.DRAWING_WATERMARK_TEXT)
-def draw_walls(width, length, height, tile_length, tile_height):
+def draw_walls(width, length, height, tile_length, tile_height, door_width=None, door_height=None):
     scale_factor = 9.0  # TODO: need compute this
     perimetr = (length+width)*2
 
     size = (sys.maxsize, sys.maxsize)
     while any(s > 1000 for s in size):
         scale_factor += 1.0
-        size = (int(perimetr/scale_factor), int(width/scale_factor))  # scale 10sm=100mm : 1px.
+        size = (int(perimetr/scale_factor), int(height/scale_factor))  # scale 10sm=100mm : 1px.
+
+    d_length = int(length/scale_factor)
+    d_width = int(width/scale_factor)
+    d_height = int(height/scale_factor)
 
     tile_size = (int(tile_length/scale_factor), int(tile_height/scale_factor))
+
+    if door_width and door_height:
+        d_door_width = int(door_width/scale_factor)
+        d_door_height = int(door_height/scale_factor)
 
     image = Image.new('RGBA', size, (255, 255, 255, 255))
     draw = ImageDraw.Draw(image)
@@ -212,6 +220,7 @@ def draw_walls(width, length, height, tile_length, tile_height):
     # single method
     line_color = (255, 0, 0, 255)
     side_color = (0, 0, 255, 255)
+    door_color = (0, 255, 0, 255)
     line_width = 1
 
     # рисуем контур развертки всех стенок
@@ -221,7 +230,7 @@ def draw_walls(width, length, height, tile_length, tile_height):
     draw.line((0, 0, 0, size[1] - 1), fill=line_color, width=line_width)
     draw.line((size[0]-1, 0, size[0] - 1, size[1] - 1), fill=line_color, width=line_width)
 
-    laying_direction_y = -1
+    laying_direction_y = -1  # TODO: need to use
 
     # рисуем плитки по length
     curr_x = 0
@@ -237,9 +246,25 @@ def draw_walls(width, length, height, tile_length, tile_height):
         curr_y += tile_size[1]
 
     # рисуем стыки стен
-    draw.line((length/scale_factor, 0, length/scale_factor, size[1]-1), fill=side_color, width=2)
-    draw.line(((length+width) / scale_factor, 0, (length+width) / scale_factor, size[1] - 1), fill=side_color, width=2)
-    draw.line(((2*length+width) / scale_factor, 0, (2*length+width) / scale_factor, size[1] - 1), fill=side_color, width=2)
+    draw.line((d_length, 0, d_length, size[1]-1), fill=side_color, width=2)
+    draw.line((d_length+d_width, 0, d_length+d_width, size[1] - 1), fill=side_color, width=2)
+    draw.line((2*d_length+d_width, 0, 2*d_length+d_width, size[1] - 1), fill=side_color, width=2)
+
+    # draw door on the third wall
+    if door_width and door_height:
+        start_door_x = length + width + length/2 - door_width/2
+        d_start_door_x = int(start_door_x/scale_factor)
+
+        draw.rectangle((d_start_door_x, d_height, d_start_door_x + d_door_width, d_height-d_door_height), fill=door_color)
+
+        # draw.line((d_start_door_x, d_height, d_start_door_x, d_height-d_door_height), fill=door_color, width=2)
+        # draw.line((d_start_door_x+d_door_width, d_height, d_start_door_x+d_door_width, d_height - d_door_height), fill=door_color, width=2)
+        #
+        # draw.line((d_start_door_x, d_height-d_door_height, d_start_door_x+d_door_width, d_height - d_door_height), fill=door_color, width=2)
+        # draw.line((d_start_door_x, d_height-1, d_start_door_x+d_door_width, d_height-1), fill=door_color, width=2)
+
+        tile_in_door_x = ceil(start_door_x/tile_length) * tile_length
+        # draw.ellipse((tile_in_door_x/scale_factor - 5, d_height - 5, tile_in_door_x/scale_factor + 5, d_height + 5), fill=(255, 45, 33, 255))
 
     return image
 
