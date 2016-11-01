@@ -223,6 +223,23 @@ def draw_walls(width, length, height, tile_length, tile_height, door_width=None,
     door_color = (0, 255, 0, 255)
     line_width = 1
 
+
+    # draw door on the third wall
+    if door_width and door_height:
+        start_door_x = length + width + length/2 - door_width/2
+        d_start_door_x = int(start_door_x/scale_factor)
+
+        draw.rectangle((d_start_door_x, d_height, d_start_door_x + d_door_width, d_height-d_door_height), fill=door_color)
+
+        # draw.line((d_start_door_x, d_height, d_start_door_x, d_height-d_door_height), fill=door_color, width=2)
+        # draw.line((d_start_door_x+d_door_width, d_height, d_start_door_x+d_door_width, d_height - d_door_height), fill=door_color, width=2)
+        #
+        # draw.line((d_start_door_x, d_height-d_door_height, d_start_door_x+d_door_width, d_height - d_door_height), fill=door_color, width=2)
+        # draw.line((d_start_door_x, d_height-1, d_start_door_x+d_door_width, d_height-1), fill=door_color, width=2)
+
+        # tile_in_door_x = ceil(start_door_x/tile_length) * tile_length
+        # draw.ellipse((tile_in_door_x/scale_factor - 5, d_height - 5, tile_in_door_x/scale_factor + 5, d_height + 5), fill=(255, 45, 33, 255))
+
     # рисуем контур развертки всех стенок
     draw.line((0, 0, size[0] - 1, 0), fill=line_color, width=line_width)
     draw.line((0, size[1]-1, size[0] - 1, size[1] - 1), fill=line_color, width=line_width)
@@ -249,22 +266,6 @@ def draw_walls(width, length, height, tile_length, tile_height, door_width=None,
     draw.line((d_length, 0, d_length, size[1]-1), fill=side_color, width=2)
     draw.line((d_length+d_width, 0, d_length+d_width, size[1] - 1), fill=side_color, width=2)
     draw.line((2*d_length+d_width, 0, 2*d_length+d_width, size[1] - 1), fill=side_color, width=2)
-
-    # draw door on the third wall
-    if door_width and door_height:
-        start_door_x = length + width + length/2 - door_width/2
-        d_start_door_x = int(start_door_x/scale_factor)
-
-        draw.rectangle((d_start_door_x, d_height, d_start_door_x + d_door_width, d_height-d_door_height), fill=door_color)
-
-        # draw.line((d_start_door_x, d_height, d_start_door_x, d_height-d_door_height), fill=door_color, width=2)
-        # draw.line((d_start_door_x+d_door_width, d_height, d_start_door_x+d_door_width, d_height - d_door_height), fill=door_color, width=2)
-        #
-        # draw.line((d_start_door_x, d_height-d_door_height, d_start_door_x+d_door_width, d_height - d_door_height), fill=door_color, width=2)
-        # draw.line((d_start_door_x, d_height-1, d_start_door_x+d_door_width, d_height-1), fill=door_color, width=2)
-
-        tile_in_door_x = ceil(start_door_x/tile_length) * tile_length
-        # draw.ellipse((tile_in_door_x/scale_factor - 5, d_height - 5, tile_in_door_x/scale_factor + 5, d_height + 5), fill=(255, 45, 33, 255))
 
     return image
 
