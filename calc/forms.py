@@ -33,7 +33,7 @@ class CalcForm(forms.Form):
     delimiter = forms.FloatField(min_value=0.0, max_value=10.0, required=True, label=_("Расстояние между плитками (mm)"))
 
     price = forms.FloatField(min_value=0.0, max_value=100000.0,
-                             required=False, label=_("Стоимость плитки (руб)"),
+                             required=False, label=_("Стоимость одной плитки (руб)"),
                              widget=forms.NumberInput(attrs={'placeholder': _("Необязательно")}))
 
     reserve = forms.FloatField(min_value=0.0, max_value=100.0, label=_("Запас (%)"))
@@ -98,6 +98,19 @@ class CalcForm(forms.Form):
 
         return int((width_cnt * length_cnt) + (width_even_cnt * length_even_cnt))
 
+    def get_data(self):
+        return {
+            'length': self.cleaned_data['length'],
+            'width': self.cleaned_data['width'],
+
+            'tile_length': self.cleaned_data['tile_length'],
+            'tile_width': self.cleaned_data['tile_width'],
+
+            'delimiter': self.cleaned_data['delimiter'],
+            'price': self.cleaned_data['price'],
+            'reserve': self.cleaned_data['reserve'],
+        }
+
     def calc(self):
         raise NotImplementedError
 
@@ -105,6 +118,14 @@ class CalcForm(forms.Form):
 class CalcFloorForm(CalcForm):
     method = forms.ChoiceField(LAYING_METHODS, required=True, label="Способ укладки")
     # TODO: start_method - 1. from center, 2. from angle
+
+    field_order = [
+        'length', 'width', 'height',
+        'tile_length', 'tile_width', 'delimiter',
+        'method',
+        'price',
+        'reserve',
+    ]
 
     def clean(self):
         cleaned_data = super(CalcFloorForm, self).clean()
@@ -148,6 +169,11 @@ class CalcFloorForm(CalcForm):
 
         return result, cost, img_url, reserve, total_area
 
+    def get_data(self):
+        data = super(CalcFloorForm, self).get_data()
+        data.update({'method': self.cleaned_data['method']})
+        return data
+
 
 class CalcWallForm(CalcForm):
 
@@ -168,6 +194,7 @@ class CalcWallForm(CalcForm):
     field_order = [
         'length', 'width', 'height',
         'tile_length', 'tile_width', 'delimiter',
+        'method',
         'price',
         'reserve',
         'door_width', 'door_height'
@@ -263,7 +290,31 @@ class CalcWallForm(CalcForm):
 
         return int(width_cnt * height_cnt) - tiles_in_door
 
+    def get_data(self):
+        data = super(CalcWallForm, self).get_data()
+        data.update({
+            'height': self.cleaned_data['height'],
+            'door_width': self.cleaned_data['door_width'],
+            'door_height': self.cleaned_data['door_height']
+        })
+        return data
 
 
+class CalcTileCostForm(forms.Form):
+    """Форма для нахождения стоимости одной плитки от стоимости метра квадратного
+    """
+    tile_length = forms.IntegerField(max_value=5000, min_value=0, required=True, label=_("Длина плитки (mm)"))
+    tile_width = forms.IntegerField(max_value=5000, min_value=0, required=True, label=_("Ширина плитки (mm)"))
+    price = forms.FloatField(min_value=0.0, max_value=100000.0,
+                             required=True, label=_("Стоимость плитки (руб/m²)"))
 
+    def calc(self):
+        tile_area_m = self.cleaned_data['tile_length'] * self.cleaned_data['tile_width'] / 10**6
+        return tile_area_m, round(tile_area_m * self.cleaned_data['price'], 2)
 
+    def get_data(self):
+        return {
+            'tile_length': self.cleaned_data['tile_length'],
+            'tile_width': self.cleaned_data['tile_width'],
+            'price': self.cleaned_data['price']
+        }

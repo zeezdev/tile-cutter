@@ -23,24 +23,35 @@
     </form>
 </div>
 
+<div class="panel-group">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title" data-toggle="collapse" href="#instruction">
+                Инструкция
+            </h4>
+        </div>
+
+        <div id="instruction" class="panel-collapse collapse">
+            <div class="panel-body">
+                <ol>
+                    <li>Укажите <b>длину</b>, <b>ширину</b> и <b>высоту помещения</b> в метрах (m)</li>
+                    <li>Укажите <b>длину и высоту плитки</b> в миллиметрах (mm)</li>
+                    <li>Укажите <b>расстояние между плитками</b> в миллиметрах (mm). (Для выставления расстояния между плитками используются специальные "крестики", можно указать их толщину)</li>
+                    <li>Нажмите кнопку <b>Расчитать</b></li>
+                </ol>
+
+                <span><i>Дополнительно (необязательно)</i></span>
+                <ul>
+                    <li>Укажите <b>стоимость одной плитки</b>, если хотите узнать общую стоимость</li>
+                    <li>Укажите <b>запас</b> плитки. Рекомендуемый запас составляет не менее 5% (на подрезку, случайные сколы при подрезке)</li>
+                    <li>Укажите <b>ширину и высоту</b> двери в метрах (m), чтобы исключить площадь двери из расчета</li>
+                </ul>
+            </div>
+            <!--<div class="panel-footer">Footer</div>-->
+        </div>
+    </div>
+</div>
+
 {% include "_results.html" %}
-
-{% comment %}
-{% if result %}
-<div>
-    <p>
-        <span>Результат: </span>{{ result }}<span> плиток</span>
-    </p>
-</div>
-{% endif %}
-
-{% if cost %}
-<div>
-    <p>
-        <span>Цена: </span>{{ cost }}<span> руб.</span>
-    </p>
-</div>
-{% endif %}
-{% endcomment %}
 
 {% endblock %}
