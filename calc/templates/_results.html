@@ -1,0 +1,38 @@
+<div class="panel panel-default">
+    <div class="panel-heading">Результат</div>
+    <div class="panel-body">
+        {% if total_area %}
+        <p>
+            <span>Общая площадь для укладки&nbsp;</span>
+            <span class="result-value">{{ total_area|floatformat:2 }}</span>
+            <span>&nbsp;m²</span>
+        </p>
+        {% endif %}
+
+        {% if result %}
+        <p>
+            <span>Вам понадобится&nbsp;</span>
+            <span class="result-value">{{ result }}</span>{% if reserve %}<span>&nbsp;+&nbsp;</span>
+            <span class="result-value">{{ reserve }}</span><span>&nbsp;=&nbsp;</span>
+            <span class="result-value">{{ total }}</span>
+            {% endif %}
+            <span>&nbsp;плиток</span>
+        </p>
+        {% endif %}
+
+        {% if cost %}
+        <p>
+            <span>Стоимость плитки&nbsp;</span>
+            <span class="result-value">{{ cost|floatformat:2 }}</span><span>&nbsp;руб.</span>
+        </p>
+        {% endif %}
+
+        {% if draw %}
+        <p>
+            <span>Примерная схема укладки (в развертке): </span>
+            <br>
+            <img style="margin: 5px 10px;" src="{{ draw }}">
+        </p>
+        {% endif %}
+    </div>
+</div>

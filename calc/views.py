@@ -19,9 +19,9 @@ def floor(request):
         form = CalcFloorForm(request.POST)
         context['form'] = form
         if form.is_valid():
-            result, cost, image, reserve = form.calc()
+            result, cost, image, reserve, total_area = form.calc()
             context.update({
-                'result': result, 'cost': cost, 'draw': image, 'reserve': reserve
+                'result': result, 'cost': cost, 'draw': image, 'reserve': reserve, 'total_area': total_area, 'total': result + reserve
             })
 
     return render(request, 'calc-floor.html', context)
@@ -42,9 +42,9 @@ def walls(request):
         form = CalcWallForm(request.POST)
         context['form'] = form
         if form.is_valid():
-            result, cost, image, reserve = form.calc()
+            result, cost, image, reserve, total_area = form.calc()
             context.update({
-                'result': result, 'cost': cost, 'draw': image, 'reserve': reserve
+                'result': result, 'cost': cost, 'draw': image, 'reserve': reserve, 'total_area': total_area, 'total': result + reserve
             })
 
     return render(request, 'calc-walls.html', context)

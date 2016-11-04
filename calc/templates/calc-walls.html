@@ -23,33 +23,7 @@
     </form>
 </div>
 
-<div class="panel panel-default">
-    <div class="panel-heading">Результат</div>
-    <div class="panel-body">
-        {% if result %}
-        <p>
-            <span>Вам понадобится (c запасом): </span><b>{{ result }}</b><span> плиток</span>
-        </p>
-        <p>
-            <span>Запас: </span><b>{{ reserve }}</b><span> плиток</span>
-        </p>
-        {% endif %}
-
-        {% if cost %}
-        <p>
-            <span>Вы потратите: </span><b>{{ cost }}</b><span> руб.</span>
-        </p>
-        {% endif %}
-
-        {% if draw %}
-        <p>
-            <span>Примерная схема укладки (в развертке): </span>
-            <br>
-            <img style="margin: 5px 10px;" src="{{ draw }}">
-        </p>
-        {% endif %}
-    </div>
-</div>
+{% include "_results.html" %}
 
 {% comment %}
 {% if result %}
