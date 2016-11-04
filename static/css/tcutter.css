@@ -45,3 +45,12 @@ span.result-value {
   font-weight: bolder;
   color: #3c3c3c;
 }
+
+.panel-title {
+  cursor: pointer;
+  color: inherit;
+}
+
+.panel-title:hover {
+  color: #2e6da4;
+}

@@ -1,0 +1,59 @@
+{% extends "_base.html" %}
+
+{% load bootstrap staticfiles %}
+
+
+{% block title %}Калькулятор стоимости одной плитки{% endblock %}
+
+
+{% block extrajs %}{% endblock %}
+
+
+{% block content %}
+<h1>Расчет стоимости одной плитки</h1>
+
+<div class="well">
+    <p>
+        Очень часто в магазинах цена понравившейся плитки указана за m² (метр квадратный).
+        Данный калькулятор поможет вам узнать стоимость одной плитки.
+        Просто введите размеры и стоимость 1 квадратного метра плитки, а затем нажмите кнопку Расчитать.
+    </p>
+</div>
+
+<div class="well">
+    <form action="" method="post">
+        {% csrf_token %}
+        {{ form|bootstrap_horizontal:'col-lg-4' }}
+
+        <button type="submit" class="btn btn-success">Расчитать</button>
+    </form>
+</div>
+
+<div class="panel panel-default">
+    <div class="panel-heading">Результат</div>
+    <div class="panel-body">
+        {% if tile_area_m %}
+        <p>
+            <span>Площадь одной плитки&nbsp;</span>
+            <span class="result-value">{{ tile_area_m|floatformat:2 }}</span>
+            <span>&nbsp;m²</span>
+        </p>
+        {% endif %}
+
+        {% if cost %}
+        <p>
+            <span>Стоимость одной плитки&nbsp;</span>
+            <span class="result-value">{{ cost|floatformat:2 }}</span><span>&nbsp;руб.</span>
+        </p>
+        {% endif %}
+
+        {% if tile_area_m %}
+        <p>
+            Используйте полученный результат в наших калькуляторах плитки
+            <a href="/calc/floor/">для пола</a> или <a href="/calc/walls/">для стен</a>.
+        </p>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}

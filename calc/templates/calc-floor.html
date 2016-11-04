@@ -48,6 +48,41 @@ $('#id_method').on('change', function(e) {
     </form>
 </div>
 
+<div class="panel-group">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <h4 class="panel-title" data-toggle="collapse" href="#instruction">
+                Инструкция
+            </h4>
+        </div>
+
+        <div id="instruction" class="panel-collapse collapse">
+            <div class="panel-body">
+                <ol>
+                    <li>Укажите <b>длину</b> и <b>ширину помещения</b> в метрах (m)</li>
+                    <li>Укажите <b>длину и ширину плитки</b> в миллиметрах (mm)</li>
+                    <li>Укажите <b>расстояние между плитками</b> в миллиметрах (mm). (Для выставления расстояния между плитками используются специальные "крестики", можно указать их толщину)</li>
+                    <li>Выберите <b>способ укладки</b>
+                        <ul>
+                            <li>Прямой (от угла)</li>
+                            <li>Прямой (от центра)</li>
+                            <li>Диагональный</li>
+                        </ul>
+                    </li>
+                    <li>Нажмите кнопку <b>Расчитать</b></li>
+                </ol>
+
+                <span><i>Дополнительно (необязательно)</i></span>
+                <ul>
+                    <li>Укажите <b>стоимость одной плитки</b>, если хотите узнать общую стоимость</li>
+                    <li>Укажите <b>запас</b> плитки. Рекомендуемый запас составляет не менее 5% (на подрезку, случайные сколы при подрезке)</li>
+                </ul>
+            </div>
+            <!--<div class="panel-footer">Footer</div>-->
+        </div>
+    </div>
+</div>
+
 {% include "_results.html" %}
 
 {% endblock %}
