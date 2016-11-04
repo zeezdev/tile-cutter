@@ -37,3 +37,11 @@ body > .container {
 code {
   font-size: 80%;
 }
+
+/* CALC */
+
+span.result-value {
+  font-size: 18px;
+  font-weight: bolder;
+  color: #3c3c3c;
+}

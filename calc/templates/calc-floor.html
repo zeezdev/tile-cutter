@@ -48,50 +48,6 @@ $('#id_method').on('change', function(e) {
     </form>
 </div>
 
-<div class="panel panel-default">
-    <div class="panel-heading">Результат</div>
-    <div class="panel-body">
-        {% if result %}
-        <p>
-            <span>Вам понадобится (c запасом): </span><b>{{ result }}</b><span> плиток</span>
-        </p>
-        <p>
-            <span>Запас: </span><b>{{ reserve }}</b><span> плиток</span>
-        </p>
-        {% endif %}
-
-        {% if cost %}
-        <p>
-            <span>Вы потратите: </span><b>{{ cost }}</b><span> руб.</span>
-        </p>
-        {% endif %}
-
-        {% if draw %}
-        <p>
-            <span>Примерная схема укладки: </span>
-            <br>
-            <img style="margin: 5px 10px;" src="{{ draw }}">
-        </p>
-        {% endif %}
-    </div>
-</div>
-
-{% comment %}
-{% if result %}
-<div>
-    <p>
-        <span>Результат: </span>{{ result }}<span> плиток</span>
-    </p>
-</div>
-{% endif %}
-
-{% if cost %}
-<div>
-    <p>
-        <span>Цена: </span>{{ cost }}<span> руб.</span>
-    </p>
-</div>
-{% endif %}
-{% endcomment %}
+{% include "_results.html" %}
 
 {% endblock %}

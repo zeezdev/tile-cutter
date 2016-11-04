@@ -19,16 +19,16 @@ LAYING_METHODS = (
 
 class CalcForm(forms.Form):
     """
-    :key width: Width of a room (m^2).
-    :key length: Length of a room (m^2).
+    :key width: Width of a room in meters.
+    :key length: Length of a room in meters.
     :key tile_width: Width of the one tile (mm).
     :key tile_length: Length of the one tile (mm).
     """
     length = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label=_("Длина помещения (m)"))
     width = forms.FloatField(min_value=0.0, max_value=1000000.0, required=True, label=_("Ширина помещения (m)"))
 
-    tile_width = forms.IntegerField(min_value=1, max_value=10000, required=True, label=_("Ширина плитки (mm)"))
     tile_length = forms.IntegerField(min_value=1, max_value=10000, required=True, label=_("Длина плитки (mm)"))
+    tile_width = forms.IntegerField(min_value=1, max_value=10000, required=True, label=_("Ширина плитки (mm)"))
 
     delimiter = forms.FloatField(min_value=0.0, max_value=10.0, required=True, label=_("Расстояние между плитками (mm)"))
 
@@ -135,15 +135,18 @@ class CalcFloorForm(CalcForm):
             raise Exception("Unsupported method {}".format(method))
 
         reserve = ceil(result / 100.0 * reserve_percent)
+
         cost = None
         if price:
             cost = calc_cost(result + reserve, price)
+
+        total_area = round((width_mm * length_mm)/10**6, 2)
 
         im = draw_floor(width_mm, length_mm, tile_width, tile_length, method)
         filename = save_image(im, settings.MEDIA_ROOT)
         img_url = os.path.join(settings.MEDIA_URL, filename)
 
-        return result, cost, img_url, reserve
+        return result, cost, img_url, reserve, total_area
 
 
 class CalcWallForm(CalcForm):
@@ -164,7 +167,7 @@ class CalcWallForm(CalcForm):
 
     field_order = [
         'length', 'width', 'height',
-        'tile_width', 'tile_length', 'delimiter',
+        'tile_length', 'tile_width', 'delimiter',
         'price',
         'reserve',
         'door_width', 'door_height'
@@ -233,11 +236,13 @@ class CalcWallForm(CalcForm):
         if price:
             cost = calc_cost(result + reserve, price)
 
+        total_area = round((((width_mm + length_mm) * 2) * height_mm) / 10**6, 2)
+
         im = draw_walls(width_mm, length_mm, height_mm, tile_length, tile_width, door_width_mm, door_height_mm)
         filename = save_image(im, settings.MEDIA_ROOT)
         img_url = os.path.join(settings.MEDIA_URL, filename)
 
-        return result, cost, img_url, reserve
+        return result, cost, img_url, reserve, total_area
 
     @staticmethod
     def _calc_direct_with_door(l, w, h, tw, th, dl, door_width=None, door_height=None):  # TODO: move in to algorithms; Use direction of start.
