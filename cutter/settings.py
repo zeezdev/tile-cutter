@@ -37,6 +37,9 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django.contrib.sitemaps',
+    'django.contrib.sites',
+
     'bootstrapform',
 
     'cutter',
@@ -161,6 +164,8 @@ STATICFILES_DIRS = (
 MEDIA_ROOT = "/root/webapps/cutter/media/"
 MEDIA_URL = "/media/"
 
+# Sites framework
+SITE_ID = 1
 
 # DRAWING
 DRAWING_WATERMARK_TEXT = "www.tcutter.ru"
