@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /admin # не индексировать админку сайта
+Host: tcutter.ru # основное зеркало сайта
+Sitemap: http://tcutter.ru/sitemap.xml

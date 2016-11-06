@@ -1,11 +1,15 @@
 {% load staticfiles i18n %}
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="yandex-verification" content="b16e044c6344bc46" />
+    <meta name="robots" content="all"/> <!-- разрешено индексировать текст и ссылки на странице -->
+    <meta name="description" content="{% block meta_description %}{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}калькулятор плитки,онлайн-калькулятор плитки, калькулятор напольной плитки, калькулятор настенной плитки, расчитать плитку онлайн, расчитать плитку для ванной, расчиать плитку для туалета, расчитать плитку для пола, рассчитать плитку, tile cutter, схема уладки плитки онлайн{% endblock %}"/>
     <title>ПЛИТКОРЕЗ | {% block title %}{% endblock %}</title>
 
     <link rel="stylesheet" type="text/css" href="{% static 'bower_components/bootstrap/dist/css/bootstrap.css' %}">
@@ -46,7 +50,7 @@
     <footer class="footer">
         <div class="container">
             <p class="text-muted">
-                © Copyright 2016 TCutter
+                © Copyright 2016 Плиткорез. Онлайн-калькулятор плитки.
             </p>
         </div>
     </footer>
