@@ -265,8 +265,13 @@ class CalcWallForm(CalcForm):
 
         total_area = round((((width_mm + length_mm) * 2) * height_mm) / 10**6, 2)
 
-        im = draw_walls(width_mm, length_mm, height_mm, tile_length, tile_width, door_width_mm, door_height_mm)
-        filename = save_image(im, settings.MEDIA_ROOT)
+        from .drawing import draw_bathroom, Canvas, Size
+        # im = draw_walls(width_mm, length_mm, height_mm, tile_length, tile_width, door_width_mm, door_height_mm)
+        door_size = None
+        if door_width_mm is not None and door_height_mm is not None:
+            door_size = Size(door_width_mm, door_height_mm)
+        canvas = draw_bathroom(length_mm, width_mm, height_mm, delimiter, tile_length, tile_width, door_size)
+        filename = save_image(canvas.im, settings.MEDIA_ROOT)
         img_url = os.path.join(settings.MEDIA_URL, filename)
 
         return result, cost, img_url, reserve, total_area
