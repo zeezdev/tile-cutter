@@ -14,6 +14,7 @@
 
     <link rel="stylesheet" type="text/css" href="{% static 'bower_components/bootstrap/dist/css/bootstrap.css' %}">
     <link rel="stylesheet" type="text/css" href="{% static 'css/tcutter.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap-extra.css' %}">
 
     <script src="{% static 'bower_components/jquery/dist/jquery.min.js' %}"></script>
     <script src="{% static 'bower_components/bootstrap/dist/js/bootstrap.min.js' %}"></script>
@@ -49,9 +50,22 @@
 
     <footer class="footer">
         <div class="container">
-            <p class="text-muted">
-                © Copyright 2016 Плиткорез. Онлайн-калькулятор плитки.
-            </p>
+            <div class="row">
+                <div class="col-lg-6 col-md-6">
+                    <p class="text-muted text-left-lg text-left-md text-center-sm text-center-xs">
+                        © Copyright 2016 Плиткорез. Онлайн-калькулятор плитки.
+                    </p>
+                </div>
+
+                <div class="col-lg-6 col-md-6">
+                    <p class="text-muted text-right-lg text-right-md text-center-sm text-center-xs">
+                        Email: <a href="mailto:info@tcutter.ru">info@tcutter.ru</a>
+                    </p>
+                </div>
+            </div>
+
+
+
         </div>
     </footer>
 
