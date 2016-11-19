@@ -39,7 +39,7 @@ def floor(request):
 
 def walls(request):
     form = CalcWallForm(initial={
-        'width': 3.0, 'length': 5.0, 'height': 2.5,
+        'width': 2.5, 'length': 3.0, 'height': 2.5,
         'tile_width': 400,
         'tile_length': 400,
         'delimiter': 1.5,
