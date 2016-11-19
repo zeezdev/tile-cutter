@@ -1,6 +1,7 @@
 import sys
 from math import tan, tanh, sqrt, ceil
 from django.conf import settings
+from .drawing import add_text_watermark
 
 
 LAYING_METHOD_DIRECT = 1
@@ -29,48 +30,6 @@ def check_with_delimiters(l, tl, d, c):
 
 
 from PIL import Image, ImageDraw, ImageColor, ImageFont
-
-
-__WATERMARK_FONT_SIZE = 60
-
-
-def get_font(size):
-    return ImageFont.truetype(
-        settings.DRAWING_WATERMARK_FONT,
-        size=size
-    )
-
-def add_text_watermark(text):
-
-    def decorator(func):
-        def wrapper(*args):
-            image = func(*args)
-
-            watermark = Image.new('RGBA', size=image.size, color=0)
-            # watermark = Image.new('RGBA', size=(image.width, 64), color=0)
-            draw = ImageDraw.Draw(watermark)
-            font = get_font(60)
-            tw = None
-            th = None
-            while True:
-                tw, th = draw.textsize(text, font=font)
-                if tw+10 < image.size[0] and th+10 < image.size[1]:
-                    break
-                font = get_font(font.size-2)
-
-            draw.text(
-                (image.width/2 - tw/2, image.height/2 - th/2),
-                text,
-                fill=(0, 0, 0, 128),
-                font=font
-            )
-
-            # image.paste(watermark, box=(0, 15), mask=watermark)
-            return Image.alpha_composite(image, watermark)
-            # return image
-
-        return wrapper
-    return decorator
 
 
 def add_background(color):
