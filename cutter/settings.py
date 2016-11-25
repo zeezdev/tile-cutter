@@ -75,6 +75,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'cutter.middleware.cutter_context',
             ],
         },
     },
@@ -170,3 +171,5 @@ SITE_ID = 1
 # DRAWING
 DRAWING_WATERMARK_TEXT = "www.tcutter.ru"
 DRAWING_WATERMARK_FONT = "/root/webapps/cutter/static/fonts/arial.ttf"
+
+CUTTER_FAKE_RESULTS_NUMBER = 1000
