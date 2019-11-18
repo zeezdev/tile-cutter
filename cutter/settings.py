@@ -160,10 +160,10 @@ STATIC_URL = '/static/'
 # STATIC_ROOT = '/home/zeez/work/cutter/static/'
 
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
+    os.path.join(BASE_DIR, '..', 'static'),
 )
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_ROOT = os.path.join(BASE_DIR, '..', 'media')
 MEDIA_URL = "/media/"
 
 # Sites framework
@@ -172,7 +172,7 @@ SITE_ID = 1
 # DRAWING
 DRAWING_WATERMARK_TEXT = "www.tcutter.ru"
 DRAWING_WATERMARK_FONT = os.path.join(
-    BASE_DIR, 'static', 'fonts', 'arial.ttf'
+    BASE_DIR, '..', 'static', 'fonts', 'arial.ttf'
 )
 
 CUTTER_FAKE_RESULTS_NUMBER = 1000
