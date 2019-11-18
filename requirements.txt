@@ -1,0 +1,11 @@
+#
+# Requirements list to deploy on Heroku
+#
+
+-r requirements/deploy.txt
+
+# Heroku: Update database configuration from $DATABASE_URL.
+dj-database-url==0.5.0
+# Simplified static file serving.
+# https://warehouse.python.org/project/whitenoise/
+whitenoise==4.1.4

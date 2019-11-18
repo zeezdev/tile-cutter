@@ -12,6 +12,10 @@ https://docs.djangoproject.com/en/1.9/ref/settings/
 
 import os
 
+# Heroku: Update database configuration from $DATABASE_URL.
+import dj_database_url
+
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -25,7 +29,7 @@ SECRET_KEY = 'n6c=i^%bnr%xyz=m&69matq=1d3k)9e-6daz+)6k+053!cqna9'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['vm26173.hv8.ru', '80.78.251.208']
+ALLOWED_HOSTS = ['tile-cutter.herokuapp.com', '127.0.0.1']
 
 
 # Application definition
@@ -87,14 +91,9 @@ WSGI_APPLICATION = 'cutter.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
 
+db_from_env = dj_database_url.config(conn_max_age=500)
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'tilecutter',
-        'USER': 'tilecutteruser',
-        'PASSWORD': 'graficon688028',
-        'HOST': '127.0.0.1'
-    }
+    'default': db_from_env
 }
 
 
@@ -117,24 +116,24 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'DEBUG',
-            'class': 'logging.FileHandler',
-            'filename': '/root/webapps/cutter/logs/debug.log',
-        },
-    },
-    'loggers': {
-        'django': {
-            'handlers': ['file'],
-            'level': 'INFO',
-            'propagate': True,
-        },
-    },
-}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'handlers': {
+#         'file': {
+#             'level': 'DEBUG',
+#             'class': 'logging.FileHandler',
+#             'filename': 'logs/debug.log',
+#         },
+#     },
+#     'loggers': {
+#         'django': {
+#             'handlers': ['file'],
+#             'level': 'INFO',
+#             'propagate': True,
+#         },
+#     },
+# }
 
 
 # Internationalization
@@ -158,11 +157,11 @@ STATIC_URL = '/static/'
 # STATIC_ROOT = '/home/zeez/work/cutter/static/'
 
 STATICFILES_DIRS = (
-    os.path.join(os.path.dirname(__file__), '../static', 'bower_components'),
-    os.path.join(os.path.dirname(__file__), '../static'),
+    os.path.join(os.path.dirname(__file__), '..', 'static', 'bower_components'),
+    os.path.join(os.path.dirname(__file__), '..', 'static'),
 )
 
-MEDIA_ROOT = "/root/webapps/cutter/media/"
+MEDIA_ROOT = os.path.join(os.path.dirname(__file__), '..', 'media')
 MEDIA_URL = "/media/"
 
 # Sites framework
@@ -170,6 +169,8 @@ SITE_ID = 1
 
 # DRAWING
 DRAWING_WATERMARK_TEXT = "www.tcutter.ru"
-DRAWING_WATERMARK_FONT = "/root/webapps/cutter/static/fonts/arial.ttf"
+DRAWING_WATERMARK_FONT = os.path.join(
+    os.path.dirname(__file__), '..', 'static', 'fonts', 'arial.ttf'
+)
 
 CUTTER_FAKE_RESULTS_NUMBER = 1000
