@@ -52,6 +52,9 @@ INSTALLED_APPS = [
 
 MIDDLEWARE_CLASSES = [
     'django.middleware.security.SecurityMiddleware',
+    # Simplified static file serving.
+    # https://warehouse.python.org/project/whitenoise/
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -157,7 +160,6 @@ STATIC_URL = '/static/'
 # STATIC_ROOT = '/home/zeez/work/cutter/static/'
 
 STATICFILES_DIRS = (
-    os.path.join(os.path.dirname(__file__), '..', 'static', 'bower_components'),
     os.path.join(os.path.dirname(__file__), '..', 'static'),
 )
 

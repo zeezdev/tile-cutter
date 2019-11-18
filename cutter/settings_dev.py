@@ -145,7 +145,6 @@ STATIC_URL = '/static/'
 # STATIC_ROOT = '/home/zeez/work/cutter/static/'
 
 STATICFILES_DIRS = (
-    os.path.join(os.path.dirname(__file__), '../static', 'bower_components'),
     os.path.join(os.path.dirname(__file__), '../static'),
 )
 
