@@ -1,6 +1,11 @@
-import sys
 from math import tan, tanh, sqrt, ceil
+import sys
+
+import cloudinary
+import cloudinary.uploader
+import cloudinary.api
 from django.conf import settings
+
 from .drawing import add_text_watermark
 
 
@@ -12,7 +17,7 @@ LAYING_METHOD_DIAGONAL = 3
 def check_with_delimiters(l, tl, d, c):
     """ Уточняет необходимое количество плитки
     после добавления межплиточных разделителей.
-    Если после добавления межплиточных расстояний
+    Если после добавления межплиточных рсстояний
     суммарная длина больше покрываемой на целую плитку
     + 1 разделитель, то эта плитка не нужна.
 
@@ -234,12 +239,19 @@ def save_image(image, path):
     import os
 
     filename = str(uuid.uuid4()) + ".png"
-
     fullname = os.path.join(path, filename)
-
     image.save(fullname, "PNG")
 
-    return filename
+    return fullname
+
+
+def upload_image(filename):
+    """
+    https://res.cloudinary.com/hndb3kzlx/image/upload/v1574079318/fgpbnms77h9xrm9mmalf.png
+    """
+    uploaded = cloudinary.uploader.upload(filename)
+    # FIXME: process bad request
+    return uploaded['secure_url']
 
 
 def calc_cost(count, price):

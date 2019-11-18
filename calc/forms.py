@@ -5,9 +5,11 @@ from django.utils.translation import ugettext_lazy as _
 from django.forms.utils import ErrorList
 import os
 
-from .algorithms import check_with_delimiters, \
-    LAYING_METHOD_DIRECT, LAYING_METHOD_DIRECT_CENTER, LAYING_METHOD_DIAGONAL, \
-    draw_floor, save_image, calc_cost, draw_walls
+from .algorithms import (
+    check_with_delimiters,
+    LAYING_METHOD_DIRECT, LAYING_METHOD_DIRECT_CENTER, LAYING_METHOD_DIAGONAL,
+    draw_floor, save_image, upload_image, calc_cost, draw_walls
+)
 
 
 LAYING_METHODS = (
@@ -164,8 +166,11 @@ class CalcFloorForm(CalcForm):
         total_area = round((width_mm * length_mm)/10**6, 2)
 
         im = draw_floor(width_mm, length_mm, tile_width, tile_length, method)
-        filename = save_image(im, settings.MEDIA_ROOT)
-        img_url = os.path.join(settings.MEDIA_URL, filename)
+        # filename = save_image(im, settings.MEDIA_ROOT)
+        # img_url = os.path.join(settings.MEDIA_URL, filename)
+        filename = save_image(im, '/tmp')
+        img_url = upload_image(filename)
+        os.remove(filename)
 
         return result, cost, img_url, reserve, total_area
 
@@ -247,7 +252,7 @@ class CalcWallForm(CalcForm):
 
         perimeter_mm = (width_mm + length_mm) * 2.0
         # NOTE: наверное не стоит добавлять ширину разделителя в длину периметра
-        # т.к. будет расход на пил. С другой стороны если плитку не пилять
+        # т.к. будет расход на пил. С другой стороны если плитку не пилят
         # а режут (плиткорезом) то расхода нет.
 
         # result = self._calc_direct(height_mm, perimeter_mm, tile_width, tile_length, delimiter)
@@ -271,8 +276,11 @@ class CalcWallForm(CalcForm):
         if door_width_mm is not None and door_height_mm is not None:
             door_size = Size(door_width_mm, door_height_mm)
         canvas = draw_bathroom(length_mm, width_mm, height_mm, delimiter, tile_length, tile_width, door_size)
-        filename = save_image(canvas.im, settings.MEDIA_ROOT)
-        img_url = os.path.join(settings.MEDIA_URL, filename)
+        # filename = save_image(canvas.im, settings.MEDIA_ROOT)
+        # img_url = os.path.join(settings.MEDIA_URL, filename)
+        filename = save_image(canvas.im, '/tmp')
+        img_url = upload_image(filename)
+        os.remove(filename)
 
         return result, cost, img_url, reserve, total_area
 
