@@ -9,7 +9,7 @@
 {% block meta_description %}
 Для расчета необходимого количества и стоимости
 напольной плитки, а так же получения примерной схемы укладки
-просто введите размеры пола и плитки, затем нажмите кнопку Расчитать
+просто введите размеры пола и плитки, затем нажмите кнопку Рассчитать
 {% endblock %}
 
 
@@ -51,7 +51,7 @@ $('#id_method').on('change', function(e) {
         {% csrf_token %}
         {{ form|bootstrap_horizontal:'col-lg-4' }}
 
-        <button type="submit" class="btn btn-success">Расчитать</button>
+        <button type="submit" class="btn btn-success">Рассчитать</button>
     </form>
 </div>
 
@@ -76,7 +76,7 @@ $('#id_method').on('change', function(e) {
                             <li>Диагональный</li>
                         </ul>
                     </li>
-                    <li>Нажмите кнопку <b>Расчитать</b></li>
+                    <li>Нажмите кнопку <b>Рассчитать</b></li>
                 </ol>
 
                 <span><i>Дополнительно (необязательно)</i></span>
