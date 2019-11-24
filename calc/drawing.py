@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
+import copy
 import os
-from abc import ABCMeta, abstractmethod
+from abc import ABCMeta, abstractmethod, abstractstaticmethod
 from PIL import Image, ImageDraw, ImageFont
-from copy import deepcopy
-from math import ceil, floor
+from math import ceil
 
 if __name__ == "__main__":
     # DRAWING
@@ -20,6 +20,12 @@ color_cutted = (255, 0, 0, 255)
 
 
 __WATERMARK_FONT_SIZE = 60
+
+
+LAYING_METHOD_DIRECT = 1
+LAYING_METHOD_DIRECT_CENTER = 2
+LAYING_METHOD_DIAGONAL = 3
+
 
 def get_font(size):
     return ImageFont.truetype(
@@ -67,7 +73,7 @@ class Object(metaclass=ABCMeta):
         self.offset = (0, 0)
 
     @abstractmethod
-    def draw(self, canvas, start_pos): pass
+    def draw(self, canvas, start_pos, **kwargs): pass
 
     @staticmethod
     def _draw_line(d, x0, y0, x1, y1, color=None):
@@ -159,7 +165,7 @@ class Canvas:
 
 
 class Tile(Object):
-    def __init__(self, w, h, start_x=None, start_y=None, max_x=None, max_y=None):
+    def __init__(self, w, h, start_x=None, start_y=None, max_x=None, max_y=None, diag=False):
         super(Tile, self).__init__()
         self.width = w
         self.height = h
@@ -167,8 +173,9 @@ class Tile(Object):
         self.start_y = start_y
         self.max_x = max_x
         self.max_y = max_y
+        self.diag = diag
 
-    def draw(self, canvas, start_pos):
+    def _direct_draw(self, canvas, start_pos, **kwargs):
         d = canvas.get_draw()
         wpix = canvas.to_pixels(self.width)
         hpix = canvas.to_pixels(self.height)
@@ -181,10 +188,10 @@ class Tile(Object):
             hpix = self.max_y
 
         if self.start_x is not None:
-            wpix = (wpix - self.start_x)
-            # sp.x += self.start_x
+            wpix = wpix - self.start_x
+            sp.x += self.start_x
         if self.start_y is not None:
-            hpix = (hpix - self.start_y)
+            hpix = hpix - self.start_y
             sp.y += self.start_y
 
         # if wpix <= 0:
@@ -200,28 +207,37 @@ class Tile(Object):
         ], fill="#b9cbda")
 
         # top line
-        if self.start_y is None:
-            self._draw_line(d, sp.x, sp.y, sp.x + wpix, sp.y, color=color)
-        else:
-            self._draw_line(d, sp.x, sp.y, sp.x + wpix, sp.y, color=color_cutted)
+        self._draw_line(
+            d, sp.x, sp.y, sp.x + wpix, sp.y,
+            color=color if self.start_y is None else color_cutted
+        )
 
         # left line
-        if self.start_x is None:
-            self._draw_line(d, sp.x, sp.y + hpix, sp.x, sp.y, color=color)
-        else:
-            self._draw_line(d, sp.x, sp.y + hpix, sp.x, sp.y, color=color_cutted)
+        self._draw_line(
+            d, sp.x, sp.y + hpix, sp.x, sp.y,
+            color=color if self.start_x is None else color_cutted
+        )
 
         # right line
-        if self.max_x is None:
-            self._draw_line(d, sp.x + wpix, sp.y, sp.x + wpix, sp.y + hpix, color=color)
-        else:
-            self._draw_line(d, sp.x + wpix, sp.y, sp.x + wpix, sp.y + hpix, color=color_cutted)
+        self._draw_line(
+            d, sp.x + wpix, sp.y, sp.x + wpix, sp.y + hpix,
+            color=color if self.max_x is None else color_cutted
+        )
 
         # bottom line
-        if self.max_y is None:
-            self._draw_line(d, sp.x + wpix, sp.y + hpix, sp.x, sp.y + hpix, color=color)
+        self._draw_line(
+            d, sp.x + wpix, sp.y + hpix, sp.x, sp.y + hpix,
+            color=color if self.max_y is None else color_cutted
+        )
+
+    def _diag_draw(self, canvas, start_pos, **kwargs):
+        pass
+
+    def draw(self, canvas, start_pos, **kwargs):
+        if self.diag:
+            self._diag_draw(canvas, start_pos, **kwargs)
         else:
-            self._draw_line(d, sp.x + wpix, sp.y + hpix, sp.x, sp.y + hpix, color=color_cutted)
+            self._direct_draw(canvas, start_pos, **kwargs)
 
     def draw_contour_out(self, canvas, start_pos, length): pass
 
@@ -317,7 +333,7 @@ class Wall(Object):
     def get_size(self):
         return Size(self.width, self.height)
 
-    def draw(self, canvas, start_pos, y_direction=-1):
+    def draw(self, canvas, start_pos, **kwargs):
         """
         :param canvas:
         :type canvas: Canvas
@@ -326,6 +342,8 @@ class Wall(Object):
         :param y_direction:  1-сверху вниз/-1-снизу вверх
         :return:
         """
+        y_direction = kwargs.get('y_direction', -1)
+
         d = canvas.get_draw()
         wpix = canvas.to_pixels(self.width)
         hpix = canvas.to_pixels(self.height)
@@ -341,7 +359,7 @@ class Wall(Object):
         if 'contour_out' in self._opt:
             length = 15
             if 'length' in self._opt['contour_out']:
-               length = int(self._opt['contour_out']['length'])
+                length = int(self._opt['contour_out']['length'])
             self.draw_contour_out(canvas, start_pos, length)  # TODO: away from here...
 
         # Рисуем плитки
@@ -358,7 +376,7 @@ class Wall(Object):
 
         is_door_draw = 'door_width' in self._opt and 'door_height' in self._opt \
                        and self._opt['door_width'] is not None and self._opt['door_height'] is not None
-        center = Position(sp.x + wpix / 2, sp.y + hpix / 2)  # цетр стены с учетом началного положения
+        center = Position(sp.x + wpix // 2, sp.y + hpix // 2)  # цетр стены с учетом начального положения
 
         if is_door_draw:
             door_size = Size(
@@ -382,6 +400,7 @@ class Wall(Object):
                     raise Exception("invalid y_direction")
 
             while True:
+                sp1 = copy.copy(sp)
                 local.x += tile_dpix  # ряд начинается с разделителя
 
                 start_x = None
@@ -390,12 +409,13 @@ class Wall(Object):
                 # если в настройках стены есть сдвиги добавляем их первому ряду плиток
                 if self._tile_opt.start_x and first_x:
                     start_x = canvas.to_pixels(self._tile_opt.start_x)
+                    sp1.x -= start_x
+
                 if self._tile_opt.start_y and first_y:
                     start_y = canvas.to_pixels(self._tile_opt.start_y)
 
-                tmp = (local.x + tile_wpix + tile_dpix)-wpix
-                if tmp > 0:
-                    max_x = tile_wpix - ((local.x + tile_wpix + tile_dpix) - wpix)
+                if local.x + tile_wpix + tile_dpix > wpix:
+                    max_x = (wpix - tile_dpix) - local.x
 
                 tile.start_x = start_x
                 tile.start_y = start_y
@@ -404,13 +424,13 @@ class Wall(Object):
 
                 if y_direction == 1:
                     pos = Position(
-                        sp.x + local.x,
-                        sp.y + local.y
+                        sp1.x + local.x,
+                        sp1.y + local.y
                     )
                 elif y_direction == -1:
                     pos = Position(
-                        sp.x + local.x,
-                        sp.y + hpix - (local.y + tile_hpix)
+                        sp1.x + local.x,
+                        sp1.y + hpix - (local.y + tile_hpix)
                     )
                 else:
                     raise Exception("invalid y_direction")
@@ -473,7 +493,6 @@ class Wall(Object):
 
         # TODO: other objects ...
 
-
         bound_box_in_canvas = (
             sp.x,  # start X
             sp.y,  # start Y
@@ -503,8 +522,318 @@ class Wall(Object):
         self._draw_line(d, sp.x + wpix, sp.y + hpix, sp.x + wpix, sp.y + hpix + length)
 
 
+class AbstractFloorDrawingMethod(metaclass=ABCMeta):
+
+    @abstractstaticmethod
+    def draw_floor(canvas, start_pos, size_pix, tile_opt, y_dir):
+        pass
+
+
+class DirectFloorDrawingMethod(AbstractFloorDrawingMethod):
+
+    @staticmethod
+    def draw_floor(canvas, start_pos, size_pix, tile_opt, y_dir):
+        tile_wpix = canvas.to_pixels(tile_opt.width)
+        tile_hpix = canvas.to_pixels(tile_opt.height)
+        tile_dpix = canvas.to_pixels(tile_opt.delimiter) or 1
+
+        tile = Tile(tile_opt.width, tile_opt.height)
+
+        local = Position()
+        tiles_count = 0
+
+        sp = copy.copy(start_pos)
+        wpix, hpix = size_pix.width, size_pix.height
+
+        while True:
+            local.y += tile_dpix  # ряд начинается с разделителя
+
+            start_y = None
+            max_y = None
+
+            if local.y + tile_hpix > hpix - tile_dpix:  # целая плитка не входит
+                if y_dir == 1:  # подрезка снизу
+                    max_y = (hpix - tile_dpix) - local.y
+                elif y_dir == -1:  # подрезка сверху
+                    start_y = (local.y + tile_hpix) - (hpix - tile_dpix)
+                else:
+                    raise Exception("invalid y_direction")
+
+            while True:
+                local.x += tile_dpix  # ряд начинается с разделителя
+
+                start_x = None
+                max_x = None
+
+                tmp = (local.x + tile_wpix + tile_dpix) - wpix
+                if tmp > 0:
+                    max_x = tile_wpix - ((local.x + tile_wpix + tile_dpix) - wpix)
+
+                tile.start_x = start_x
+                tile.start_y = start_y
+                tile.max_x = max_x
+                tile.max_y = max_y
+
+                if y_dir == 1:
+                    pos = Position(
+                        sp.x + local.x,
+                        sp.y + local.y
+                    )
+                elif y_dir == -1:
+                    pos = Position(
+                        sp.x + local.x,
+                        sp.y + hpix - (local.y + tile_hpix)
+                    )
+                else:
+                    raise Exception("invalid y_direction")
+
+                tile_pos = PositionalObject(tile, pos, {'y_direction': y_dir})
+                tile_pos.draw(canvas)
+
+                if tile.start_x is None:  # если плитка не подрезка с предыдущей стены
+                    tiles_count += 1
+
+                if max_x is not None and max_x > 0:
+                    local.x += tile_dpix
+                    local.x += max_x - (start_x or 0)
+                    tile_opt.max_x = max_x / canvas._scale_factor  # запомним подрезку последней плитки
+                else:
+                    local.x += tile_wpix - (start_x or 0)
+
+                # if tile_dpix > 2:
+                #     x += tile_dpix-2
+                if local.x >= wpix:
+                    break
+
+                # first_x = False
+
+            # ---------
+            local.x = 0
+            # first_x = True
+
+            if start_y is not None:
+                local.y += tile_hpix  # -start_y
+            else:
+                local.y += tile_hpix
+
+            if local.y >= hpix:
+                break
+
+
+class CenterFloorDrawingMethod(AbstractFloorDrawingMethod):
+
+    @staticmethod
+    def draw_floor(canvas, start_pos, size_pix, tile_opt, y_dir):
+        tile_wpix = canvas.to_pixels(tile_opt.width)
+        tile_hpix = canvas.to_pixels(tile_opt.height)
+        tile_dpix = canvas.to_pixels(tile_opt.delimiter) or 1
+
+        tile = Tile(tile_opt.width, tile_opt.height)
+
+        sp = copy.copy(start_pos)
+        wpix, hpix = size_pix.width, size_pix.height
+
+        # находим центр
+        center = Position(
+            (wpix - tile_wpix) // 2,
+            (hpix - tile_hpix) // 2
+        )
+        tiles_count = 0  # optional
+
+        def draw_stip(center):
+            nonlocal tiles_count
+
+            local_center = copy.copy(center)  # начальная позиция
+
+            # рисуем центр
+            pos = Position(
+                sp.x + local_center.x,
+                sp.y + local_center.y
+            )
+            tile_pos = PositionalObject(tile, pos,  {'y_direction': y_dir})
+            tile_pos.draw(canvas)
+            tiles_count += 1
+
+            local = copy.copy(local_center)
+            local.y += tile_hpix - tile_dpix
+
+            # вниз от центра
+            while True:
+                local.y += tile_dpix
+
+                if local.y + tile_hpix > hpix - tile_hpix:  # целая плитка не входит
+                    tile.start_y = None
+                    tile.max_y = (hpix - tile_dpix) - local.y
+                else:
+                    tile.start_y = None
+                    tile.max_y = None
+
+                pos = Position(
+                    sp.x + local.x,
+                    sp.y + local.y
+                )
+                tile_pos = PositionalObject(tile, pos,  {'y_direction': y_dir})
+                tile_pos.draw(canvas)
+                tiles_count += 1
+
+                local.y += tile_hpix
+                if local.y > hpix:
+                    break
+
+            local = copy.copy(local_center)
+
+            # вверх от центра
+            while True:
+                local.y -= tile_dpix
+                if local.y < 0:  # целая плитка не входит
+                    tile.start_y = local.y * -1
+                    tile.max_y = None
+                else:
+                    tile.start_y = None
+                    tile.max_y = None
+
+                pos = Position(
+                    sp.x + local.x,
+                    sp.y + local.y
+                )
+                tile_pos = PositionalObject(tile, pos,  {'y_direction': y_dir})
+                tile_pos.draw(canvas)
+                tiles_count += 1
+
+                local.y -= tile_hpix
+                if local.y < -tile_hpix:
+                    break
+
+        local_center = copy.copy(center)
+        draw_stip(local_center)  # центральная полоса
+        local_center.x += tile_wpix
+
+        # полосы справа
+        while True:
+            local_center.x += tile_dpix
+
+            if local_center.x + tile_wpix > wpix - tile_wpix:  # целая плитка не входит
+                tile.start_x = None
+                tile.max_x = (wpix - tile_dpix) - local_center.x
+            else:
+                tile.start_x = None
+                tile.max_x = None
+
+            draw_stip(local_center)
+
+            local_center.x += tile_wpix
+            if local_center.x > wpix:
+                break
+
+        # полосы слева
+        local_center = copy.copy(center)
+        while True:
+            local_center.x -= tile_wpix + tile_dpix
+
+            if local_center.x < 0:  # целая плитка не входит
+                tile.start_x = local_center.x * -1
+                tile.max_x = None
+            else:
+                tile.start_x = None
+                tile.max_x = None
+
+            draw_stip(local_center)
+            if local_center.x < 0:
+                break
+
+
+class DiagonalFloorDrawingMethod(AbstractFloorDrawingMethod):
+
+    @staticmethod
+    def draw_floor(canvas, start_pos, size_pix, tile_opt, y_dir):
+        pass
+
+
+FLOOR_DRAWING_METHODS = {
+    LAYING_METHOD_DIRECT: DirectFloorDrawingMethod,
+    LAYING_METHOD_DIRECT_CENTER: CenterFloorDrawingMethod,
+    LAYING_METHOD_DIAGONAL: DiagonalFloorDrawingMethod
+}
+
+
+class Floor(Object):
+    """Draw a floor object"""
+
+    DEFAULT_DIRECTION = 1
+
+    def __init__(self, w, l, tile, options=None):
+        super(Floor, self).__init__()
+
+        self.width = w
+        self.length = l
+        self._tile_opt = tile
+
+        self._opt = options or {}
+
+    def draw(self, canvas, start_pos, **kwargs):
+        drawing_method = kwargs.get('method', LAYING_METHOD_DIRECT)
+        assert drawing_method in FLOOR_DRAWING_METHODS, f'Unknown floor drawing method: {drawing_method}'
+
+        y_dir = kwargs.get('y_direction', Floor.DEFAULT_DIRECTION)
+
+        d = canvas.get_draw()
+        wpix = canvas.to_pixels(self.length)
+        hpix = canvas.to_pixels(self.width)
+        sp = start_pos
+        size_pix = Size(wpix, hpix)
+
+        # Рисуем общий контур стены
+        self._draw_line(d, sp.x, sp.y, sp.x + wpix, sp.y)
+        self._draw_line(d, sp.x + wpix, sp.y, sp.x + wpix, sp.y + hpix)
+        self._draw_line(d, sp.x + wpix, sp.y + hpix, sp.x, sp.y + hpix)
+        self._draw_line(d, sp.x, sp.y + hpix, sp.x, sp.y)
+
+        # Рисуем внешний контур для размеров
+        if 'contour_out' in self._opt:
+            length = 15
+            if 'length' in self._opt['contour_out']:
+                length = int(self._opt['contour_out']['length'])
+            self.draw_contour_out(canvas, start_pos, length)  # TODO: away from here...
+
+        # Рисуем плитки
+        FLOOR_DRAWING_METHODS[drawing_method].draw_floor(canvas, start_pos, size_pix, self._tile_opt, y_dir)
+
+        # TODO: other objects ...
+
+        bound_box_in_canvas = (
+            sp.x,  # start X
+            sp.y,  # start Y
+            wpix,  # width
+            hpix,  # height
+        )
+        # print("tiles count=%d" % tiles_count)
+
+        return bound_box_in_canvas
+
+    def draw_contour_out(self, canvas, start_pos, length):
+        d = canvas.get_draw()
+        wpix = canvas.to_pixels(self.length)
+        hpix = canvas.to_pixels(self.width)
+        sp = start_pos
+
+        self._draw_line(d, sp.x, sp.y, sp.x - length, sp.y)
+        self._draw_line(d, sp.x, sp.y, sp.x, sp.y - length)
+
+        self._draw_line(d, sp.x+wpix, sp.y, sp.x+wpix + length, sp.y)
+        self._draw_line(d, sp.x+wpix, sp.y, sp.x+wpix, sp.y - length)
+
+        self._draw_line(d, sp.x, sp.y+hpix, sp.x - length, sp.y + hpix)
+        self._draw_line(d, sp.x, sp.y+hpix, sp.x, sp.y + hpix + length)
+
+        self._draw_line(d, sp.x + wpix, sp.y + hpix, sp.x + wpix + length, sp.y + hpix)
+        self._draw_line(d, sp.x + wpix, sp.y + hpix, sp.x + wpix, sp.y + hpix + length)
+
+    def get_size(self):
+        return Size(self.length, self.width)
+
+
 class PositionalObject:
-    def __init__(self, obj, pos):
+    def __init__(self, obj, pos, options=None):
         """
         :param obj:
         :type obj: Object
@@ -515,9 +844,10 @@ class PositionalObject:
         if not isinstance(pos, Position):
             raise Exception("not Position type")
         self.pos = pos
+        self.options = options
 
     def draw(self, canvas):
-        self._obj.draw(canvas, self.pos)
+        self._obj.draw(canvas, self.pos, **(self.options or {}))
 
     def is_in_area(self, area_pos, area_size, canvas):
         """
@@ -525,15 +855,20 @@ class PositionalObject:
         :type area_pos: Position
         :param area_size:
         :type area_size: Size
+        :param canvas:
+        :type canvas: Canvas
         :return:
         """
         x0 = self.pos.x
         x1 = self.pos.x + canvas.to_pixels(self._obj.get_size().width)
         y0 = self.pos.y
         y1 = self.pos.y + canvas.to_pixels(self._obj.get_size().height)
-        return x0 > area_pos.x and x1 < area_pos.x + area_size.width \
-               and y0 > area_pos.y and y1 < area_pos.y + area_size.height
-
+        return (
+                x0 > area_pos.x
+                and x1 < area_pos.x + area_size.width
+                and y0 > area_pos.y
+                and y1 < area_pos.y + area_size.height
+        )
 
 
 class Draw:
@@ -575,102 +910,9 @@ class Draw:
         canvas.im = Image.alpha_composite(image, watermark)
 
 
-def draw_bathroom(l, w, h, d, tw, th, door_size=None):
-    """ Возможно следует добавить расчет "максимум целых плиток"
-    :param l:
-    :param w:
-    :param h:
-    :param d:
-    :param tw:
-    :param th:
-    :return:
-    """
-    draw = Draw()
-
-    WIDTH_HD = 1280
-    HEIGHT_HD = 720
-
-    contour_length = l/100.0 * 3.0  # 3%
-    wall_del_px = contour_length * 3  # расстояние между краями схем стен
-    padding_px = l/100.0 * 8.0
-
-    # найдем ожидаемые размеры (в мм) которые может занять схема
-    max_size = Size(
-        width=((w+l)*2) + (wall_del_px * 3) + (padding_px * 2),
-        height=h + (contour_length*2)
-    )
-
-    print(max_size)
-
-    canvas = Canvas(
-        WIDTH_HD, HEIGHT_HD,
-        max_size=max_size
-    )
-
-    options = {
-        'contour_out': {
-                'length': canvas.to_pixels(contour_length)
-            }
-    }
-
-    wall_del_px = canvas.to_pixels(wall_del_px)
-    # print("wall del px=", wall_del_px)
-    padding_px = canvas.to_pixels(padding_px)
-    # print("padding px=", padding_px)
-
-    draw_offset = Position(
-        # WIDTH_HD/2 - canvas.to_pixels(max_size.width)/2,
-        padding_px,
-        HEIGHT_HD/2 - canvas.to_pixels(max_size.height)/2
-    )
-
-    # print(canvas.to_pixels(max_size.width) + padding_px)
-
-    wall = Wall(l, h, tile=WallTilesOptions(tw, th, d, sx=None), options=options)
-    draw.draw(canvas, [PositionalObject(wall, draw_offset)])
-    wo = wall.get_tile_options()
-    # print("Wall#1:\n\tsx={} sy={} mx={} my={}".format(wo.start_x, wo.start_y, wo.max_x, wo.max_y))
-
-    tile_start_from_x = wall.get_tile_options().max_x
-    draw_offset.x += canvas.to_pixels(wall.width) + wall_del_px
-    wall = Wall(w, h, tile=WallTilesOptions(tw, th, d, sx=tile_start_from_x), options=options)
-    draw.draw(canvas, [PositionalObject(wall, draw_offset)])
-    wo = wall.get_tile_options()
-    # print("Wall#2:\n\tsx={} sy={} mx={} my={}".format(wo.start_x, wo.start_y, wo.max_x, wo.max_y))
-
-    tile_start_from_x = wall.get_tile_options().max_x
-    draw_offset.x += canvas.to_pixels(wall.width) + wall_del_px
-    if door_size is not None:
-        options['door_width'] = door_size.width
-        options['door_height'] = door_size.height
-    wall = Wall(l, h, tile=WallTilesOptions(tw, th, d, sx=tile_start_from_x), options=options)
-    draw.draw(canvas, [PositionalObject(wall, draw_offset)])
-    wo = wall.get_tile_options()
-    # print("Wall#3:\n\tsx={} sy={} mx={} my={}".format(wo.start_x, wo.start_y, wo.max_x, wo.max_y))
-
-    tile_start_from_x = wall.get_tile_options().max_x
-    draw_offset.x += canvas.to_pixels(wall.width) + wall_del_px
-    options['door_width'] = None
-    options['door_height'] = None
-    wall = Wall(w, h, tile=WallTilesOptions(tw, th, d, sx=tile_start_from_x), options=options)
-    draw.draw(canvas, [PositionalObject(wall, draw_offset)])
-    wo = wall.get_tile_options()
-    # print("Wall#4:\n\tsx={} sy={} mx={} my={}".format(wo.start_x, wo.start_y, wo.max_x, wo.max_y))
-
-    # FIXME: little hack!!!
-    real_width = draw_offset.x + canvas.to_pixels(wall.width) + padding_px
-    if real_width < max_size.width:
-        canvas.im = canvas.im.crop((0, 0, real_width, HEIGHT_HD))
-    canvas.im.resize((WIDTH_HD, HEIGHT_HD))
-
-    # print(real_width)
-
-    draw.draw_wm(canvas)
-
-    return canvas
-
-
 def main():
+    from .algorithms import draw_bathroom
+
     d = 1.5
     l = 3950
     w = 2460
@@ -686,6 +928,8 @@ def main():
 
 
 def test():
+    from .algorithms import draw_bathroom
+
     d = 1.5
     l = 3950
     w_start = 5000
@@ -743,6 +987,7 @@ def test():
         w = w_start
 
     return 0
+
 
 if __name__ == "__main__":
     # test()

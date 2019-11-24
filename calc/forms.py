@@ -6,9 +6,10 @@ from django.forms.utils import ErrorList
 import os
 
 from .algorithms import (
-    check_with_delimiters,
-    LAYING_METHOD_DIRECT, LAYING_METHOD_DIRECT_CENTER, LAYING_METHOD_DIAGONAL,
-    draw_floor, save_image, upload_image, calc_cost, draw_walls
+    draw_floor, draw_floor1, draw_bathroom, save_image, upload_image, calc_cost
+)
+from .drawing import (
+    Size, LAYING_METHOD_DIRECT, LAYING_METHOD_DIRECT_CENTER, LAYING_METHOD_DIAGONAL
 )
 
 
@@ -165,12 +166,19 @@ class CalcFloorForm(CalcForm):
 
         total_area = round((width_mm * length_mm)/10**6, 2)
 
-        im = draw_floor(width_mm, length_mm, tile_width, tile_length, method)
-        # filename = save_image(im, settings.MEDIA_ROOT)
-        # img_url = os.path.join(settings.MEDIA_URL, filename)
-        filename = save_image(im, '/tmp')
-        img_url = upload_image(filename)
-        os.remove(filename)
+        if method in (LAYING_METHOD_DIRECT, LAYING_METHOD_DIRECT_CENTER):
+            canvas = draw_floor1(width_mm, length_mm, delimiter, tile_width, tile_length, method)
+            im = canvas.im
+        else:
+            im = draw_floor(width_mm, length_mm, tile_width, tile_length, method)
+
+        filename = save_image(im, settings.MEDIA_ROOT if settings.DEBUG else '/tmp')
+
+        if settings.DEBUG:
+            img_url = os.path.join(settings.MEDIA_URL, os.path.basename(filename))
+        else:
+            img_url = upload_image(filename)
+            os.remove(filename)
 
         return result, cost, img_url, reserve, total_area
 
@@ -270,17 +278,18 @@ class CalcWallForm(CalcForm):
 
         total_area = round((((width_mm + length_mm) * 2) * height_mm) / 10**6, 2)
 
-        from .drawing import draw_bathroom, Canvas, Size
         # im = draw_walls(width_mm, length_mm, height_mm, tile_length, tile_width, door_width_mm, door_height_mm)
         door_size = None
         if door_width_mm is not None and door_height_mm is not None:
             door_size = Size(door_width_mm, door_height_mm)
         canvas = draw_bathroom(length_mm, width_mm, height_mm, delimiter, tile_length, tile_width, door_size)
-        # filename = save_image(canvas.im, settings.MEDIA_ROOT)
-        # img_url = os.path.join(settings.MEDIA_URL, filename)
-        filename = save_image(canvas.im, '/tmp')
-        img_url = upload_image(filename)
-        os.remove(filename)
+        filename = save_image(canvas.im, settings.MEDIA_ROOT if settings.DEBUG else '/tmp')
+
+        if settings.DEBUG:
+            img_url = os.path.join(settings.MEDIA_URL, os.path.basename(filename))
+        else:
+            img_url = upload_image(filename)
+            os.remove(filename)
 
         return result, cost, img_url, reserve, total_area
 
