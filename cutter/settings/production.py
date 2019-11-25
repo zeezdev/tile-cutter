@@ -79,11 +79,10 @@ LOGGING = {
 
 CACHES = {
     'default': {
-        'BACKEND': 'django.core.cache.backends.memcached.PyLibMCCache',
+        'BACKEND': 'django_bmemcached.memcached.BMemcached',
         'LOCATION': os.environ.get('MEMCACHEDCLOUD_SERVERS'),
         'TIMEOUT': 60,
         'OPTIONS': {
-            'binary': True,
             'username': os.environ.get('MEMCACHEDCLOUD_USERNAME'),
             'password': os.environ.get('MEMCACHEDCLOUD_PASSWORD'),
         }

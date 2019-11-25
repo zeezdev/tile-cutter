@@ -3,7 +3,7 @@ psycopg2==2.8.4
 Pillow==6.2.1
 gunicorn==19.6.0
 # Memcached
-pylibmc==1.6.1
+django-bmemcached==0.2.4
 # Django's plugins
 django-bootstrap-form==3.2.1
 
